@@ -1,0 +1,47 @@
+{
+    "network_model": "network.py",
+    "dataset": "cifar",
+    "models_path": "./cifar_small_2_255/",
+    "training_params": {
+        "method": "robust",
+        "epochs": 2000,
+        "lr": 0.001,
+        "lr_decay_factor": 0.5,
+        "lr_decay_step": 100,
+        "lr_decay_milestones": null,
+        "weight_decay": 0.0,
+        "optimizer": "adam",
+        "starting_epsilon": 0.0,
+        "epsilon": 0.00862745098,
+        "schedule_start": 100,
+        "schedule_length": 500,
+        "schedule_type": "smoothed",
+        "norm": "inf",
+        "verbose": false,
+        "multi_gpu": false,
+        "loader_params": {"batch_size": 512, "test_batch_size": 256, "shuffle_train": true, "train_random_transform": true, "normalize_input": true},
+        "method_params": {"bounded_input": true, "bound_type": "interval", "batch_multiplier": 1, "adversarial_training": true}
+    },
+    "attack_params": {
+        "epsilon": 0.00862745098,
+        "attack_steps": 10,
+        "attack_stepsize": 0.03,
+        "random_start": true,
+        "loss_func": "ce"
+    },
+    "eval_params": {
+        "epsilon": 0.007843,
+        "attack_steps": 200,
+        "attack_stepsize": 0.03,
+        "random_start": true,
+        "loss_func": "ce"
+    },
+    "models": [
+        {
+            "model_id": "cnn_2layer_width_2",
+            "model_class": "model_cnn_2layer",
+            "model_params": {"in_ch": 3, "in_dim": 32, "width": 2, "linear_size": 256}
+        }
+    ]
+}
+
