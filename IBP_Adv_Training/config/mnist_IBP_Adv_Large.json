@@ -1,12 +1,12 @@
 {
     "network_model": "network.py",
     "dataset": "mnist",
-    "models_path": "./mnist_small_03_04/",
+    "models_path": "./mnist_IBP_Large_03_04/",
     "training_params": {
         "method": "robust",
         "epochs": 200,
         "lr": 5e-4,
-        "lr_decay_factor": 0.5,
+        "lr_decay_factor": 0.1,
         "lr_decay_step": 50,
         "lr_decay_milestones": null,
         "weight_decay": 0.0,
@@ -14,7 +14,7 @@
         "starting_epsilon": 0.0,
         "epsilon": 0.4,
         "schedule_start": 10,
-        "schedule_length": 100,
+        "schedule_length": 51,
         "schedule_type": "smoothed",
         "norm": "inf",
         "verbose": false,

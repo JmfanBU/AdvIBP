@@ -142,6 +142,7 @@ def epoch_train(
     batch_time = AverageMeter()
     batch_multiplier = kwargs.get("batch_multiplier", 1)
     coeff1, coeff2 = 1, 0
+    optimal = False
 
     if train:
         model.train()
@@ -293,7 +294,8 @@ def epoch_train(
             if train:
                 regular_grads = flat_grad(model, regular_ce)
                 robust_grads = flat_grad(model, robust_ce)
-                coeff1, coeff2 = two_obj_gradient(regular_grads, robust_grads)
+                coeff1, coeff2, optimal = two_obj_gradient(regular_grads,
+                                                           robust_grads)
                 loss = coeff1 * regular_ce + coeff2 * robust_ce
                 model.zero_grad()
             else:
@@ -322,9 +324,9 @@ def epoch_train(
 
         if train:
             pbar.set_description(
-                'Epoch: {}, eps: {:.4f}, coeff1: {:.2f}, coeff2: {:.2f} '
-                'R: {model_range:.2f}'.format(
-                    t, eps, coeff1, coeff2,
+                'Epoch: {}, eps: {:.4f}, coeff1: {:.2f}, coeff2: {:.2f}, '
+                'optimal: {}, R: {model_range:.2f}'.format(
+                    t, eps, coeff1, coeff2, optimal,
                     model_range=model_range,
                 )
             )
@@ -364,28 +366,45 @@ def intermediate_eps(eps_scheduler, layer_ub, layer_lb):
     # center of the intermediate layer set
     intermediate_center = (layer_lb + layer_ub) / 2
     epsilon = layer_ub - intermediate_center
-    eps_scheduler.init_value = 0.
+    eps_scheduler.init_value = epsilon.detach().cpu().numpy()
     eps_scheduler.final_value = epsilon.detach().cpu().numpy()
     return eps_scheduler, intermediate_center, epsilon
 
 
-def two_obj_gradient(grad1, grad2):
+def two_obj_gradient(grad1, grad2, normalized=False):
     dot = torch.dot(grad1, grad2)
     grad1_norm = grad1.norm()
     grad2_norm = grad2.norm()
     grad1_normalized = grad1 / grad1_norm
     grad2_normalized = grad2 / grad2_norm
-    if dot > 0:
-        bisector = grad1_normalized + grad2_normalized
-        bisector_norm = bisector.norm()
-        coeff = 0.5 / bisector_norm.pow(2) * \
-            (grad1_norm + grad2_norm + dot / grad1_norm + dot / grad2_norm)
-        coeff1 = coeff / grad1_norm
-        coeff2 = coeff / grad2_norm
-    else:
-        coeff1 = 1.
-        if grad2_norm == 0:
-            coeff2 = 0.
+    optimal = False
+    if dot >= grad1_norm.pow(2) or dot >= grad2_norm.pow(2):
+        if dot > 0:
+            bisector = grad1_normalized + grad2_normalized
+            bisector_norm = bisector.norm()
+            coeff = 0.5 / bisector_norm.pow(2) * \
+                (grad1_norm + grad2_norm + dot / grad1_norm + dot / grad2_norm)
+            coeff1 = coeff / grad1_norm
+            coeff2 = coeff / grad2_norm
         else:
-            coeff2 = -dot / grad2_norm.pow(2)
-    return coeff1, coeff2
+            coeff1 = 1.
+            if grad2_norm == 0:
+                coeff2 = 0.
+            elif grad1_norm == 0:
+                coeff1 = 0.
+                coeff2 = 1.
+            else:
+                coeff2 = -dot / grad2_norm.pow(2)
+    else:
+        coeff1 = (grad2_norm.pow(2) - dot) / \
+            (grad1_norm.pow(2) + grad2_norm.pow(2) - 2 * dot)
+        coeff2 = 1 - coeff1
+        optimal = True
+    if normalized:
+        coeff1, coeff2 = normalize(coeff1, coeff2)
+    return coeff1, coeff2, optimal
+
+
+def normalize(coeff1, coeff2):
+    sum = coeff1 + coeff2
+    return coeff1 / sum, coeff2 / sum
