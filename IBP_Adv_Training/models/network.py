@@ -93,7 +93,7 @@ def model_cnn_4layer(in_ch, in_dim, width, linear_size):
         nn.ReLU(),
         nn.Conv2d(4 * width, 4 * width, 4, stride=2, padding=1),
         nn.ReLU(),
-        nn.Conv2d(8 * width, 8 * width, 3, stride=1, padding=1),
+        nn.Conv2d(4 * width, 8 * width, 3, stride=1, padding=1),
         nn.ReLU(),
         nn.Conv2d(8 * width, 8 * width, 4, stride=2, padding=1),
         nn.ReLU(),
