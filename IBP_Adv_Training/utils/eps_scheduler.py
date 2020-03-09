@@ -29,11 +29,18 @@ class EpsilonScheduler():
                 self.final_step, self.init_value, self.final_value,
                 self.mid_point, self.beta
             )
-        else:
+        elif self.schedule_type == "linear":
             return self.linear_schedule(
                 epoch * self.num_steps_per_epoch + step, self.init_step,
                 self.final_step, self.init_value, self.final_value
             )
+        elif self.schedule_type == "step":
+            return self.step_schedule(
+                epoch * self.num_steps_per_epoch + step, self.init_step,
+                self.final_step, self.init_value, self.final_value
+            )
+        else:
+            raise ValueError("Unknown type of scheduler")
 
     # Smooth schedule that slowly morphs into a linear schedule.
     # Code is adapted from DeepMind's IBP implementation:
@@ -85,3 +92,16 @@ class EpsilonScheduler():
             linear_value, np.minimum(init_value, final_value),
             np.maximum(init_value, final_value)
         )
+
+    # Step scheduler: zero or final value after certain steps
+    def step_schedule(
+        self, step, init_step, final_step, init_value, final_value
+    ):
+        """step schedule"""
+        assert final_step >= init_step
+        if init_step == final_step:
+            return final_value
+        if step <= init_value:
+            return init_value
+        value = init_value if step <= final_step else final_value
+        return value

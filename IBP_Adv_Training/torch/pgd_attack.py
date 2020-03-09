@@ -22,7 +22,10 @@ class LinfPGDAttack(object):
             raise ValueError("loss function has not been implemented.")
         return loss
 
-    def perturb(self, data_nat, labels, epsilon=None, layer_idx=0):
+    def perturb(self, data_nat, labels, layer_idx=0, c_t=None, epsilon=None):
+        batch_size = data_nat.size(0)
+        if c_t is not None:
+            one_vec = torch.ones(batch_size).cuda()
         with torch.enable_grad():
             if epsilon is not None:
                 eps = epsilon
@@ -57,14 +60,32 @@ class LinfPGDAttack(object):
                 self.model.zero_grad()
                 loss = self.loss(output, labels)
                 loss.backward()
-                eta = self.a * data.grad.data.sign()
+                # data mask given inner maximization convergence
+                if c_t is not None:
+                    eta = self.a * one_vec[:, None, None, None] * \
+                        data.grad.data.sign()
+                else:
+                    eta = self.a * data.grad.data.sign()
                 data = data.detach().clone() + eta
                 try:
                     eta = torch.clamp(data - data_nat, -eps, eps)
                 except TypeError:
                     eta = torch.max(torch.min(data - data_nat, eps), -eps)
                 data = torch.clamp(data_nat + eta, 0.0, 1.0)
+                if c_t is not None:
+                    # Evaluation of the inner maximization
+                    c_x = self.FOSC(data, data_nat, eps)
+                    one_vec[c_x <= c_t] = 0.
+                    if one_vec.sum() == 0:
+                        break
 
             self.model.zero_grad()
+            if c_t is not None:
+                return data, c_x.mean()
+            else:
+                return data
 
-            return data
+    def FOSC(self, data, data_nat, eps):
+        c_x = eps * data.grad.data.norm(p='nuc', dim=(2, 3)) - \
+            (data - data_nat) @ data.grad.data
+        return c_x

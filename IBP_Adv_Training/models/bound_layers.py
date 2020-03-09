@@ -249,7 +249,6 @@ class BoundSequential(Sequential):
                 norm, h_U, h_L, loss, uns, d, a = module.interval_propagate(
                     norm, h_U, h_L, eps
                 )
-                assert (h_L <= h_U).all()
                 # this is some stability loss used for initial experiemnts,
                 # but not used in IBP_Adv_Training
                 losses += loss

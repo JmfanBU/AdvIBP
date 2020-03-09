@@ -35,7 +35,7 @@ def Train(
     schedule_start, schedule_length,
     lr_scheduler, lr_decay_step, lr_decay_milestones,
     epsilon_scheduler, max_eps, norm, logger, verbose,
-    opt, method, method_params, attack_params, evaluation_params
+    opt, method, method_params, attack_params, evaluation_params,
 ):
     # initialize logging values
     best_err = np.inf
@@ -371,7 +371,7 @@ def intermediate_eps(eps_scheduler, layer_ub, layer_lb):
     return eps_scheduler, intermediate_center, epsilon
 
 
-def two_obj_gradient(grad1, grad2, normalized=False):
+def two_obj_gradient(grad1, grad2, normalized=True):
     dot = torch.dot(grad1, grad2)
     grad1_norm = grad1.norm()
     grad2_norm = grad2.norm()

@@ -31,7 +31,7 @@
     },
     "eval_params": {
         "epsilon": 0.3,
-        "attack_steps": 200,
+        "attack_steps": 1,
         "attack_stepsize": 0.03,
         "random_start": true,
         "loss_func": "ce",
