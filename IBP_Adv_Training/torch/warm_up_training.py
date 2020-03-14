@@ -293,6 +293,8 @@ def epoch_train(
             # lower bound for adv training
             regular_ce = CrossEntropyLoss()(output_adv, labels)
         elif method == "warm_up":
+            output = model(data, method_opt="forward",
+                           disable_multi_gpu=(method == "natural"))
             data_adv, c_eval = attack.perturb(
                 data, labels, epsilon=eps, layer_idx=layer_idx, c_t=c_t
             )
