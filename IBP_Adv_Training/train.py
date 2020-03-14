@@ -1,14 +1,16 @@
 import sys
 import copy
+import torch
 import numpy as np
 import torch.optim as optim
 
 from IBP_Adv_Training.models.bound_layers import BoundSequential, \
     BoundDataParallel
 from IBP_Adv_Training.torch.training import Train
-from IBP_Adv_Training.utils.eps_scheduler import EpsilonScheduler
+from IBP_Adv_Training.torch.warm_up_training import Train_with_warmup
+from IBP_Adv_Training.utils.scheduler import Scheduler
 from IBP_Adv_Training.utils.config import load_config, get_path, update_dict, \
-    config_modelloader, config_dataloader
+    config_modelloader, config_dataloader, device
 from IBP_Adv_Training.utils.argparser import argparser
 
 
@@ -48,6 +50,16 @@ def model_train(config, train_config, model, model_id, model_config):
     multi_gpu = train_config["multi_gpu"]
     # parameters for the training method
     method_params = train_config["method_params"]
+    # adv training warm up
+    if "warm_up" in train_config:
+        warm_up_param = train_config["warm_up"]
+    else:
+        warm_up_param = False
+    # inner max evaluation
+    if "inner_max_eval" in train_config:
+        inner_max_eval = train_config["inner_max_eval"]
+    else:
+        inner_max_eval = False
     # paramters for attack params
     attack_params = config["attack_params"]
     # parameters for evaluation
@@ -76,14 +88,68 @@ def model_train(config, train_config, model, model_id, model_config):
     num_steps_per_epoch = int(
         np.ceil(1.0 * len(train_data.dataset) / batch_size)
     )
-    epsilon_scheduler = EpsilonScheduler(
-        train_config.get("schedule_type", "linear"),
-        schedule_start * num_steps_per_epoch,
-        ((schedule_start + schedule_length) - 1) * num_steps_per_epoch,
-        starting_epsilon,
-        end_epsilon,
-        num_steps_per_epoch
-    )
+    if not inner_max_eval:
+        epsilon_scheduler = Scheduler(
+            train_config.get("schedule_type", "linear"),
+            schedule_start * num_steps_per_epoch,
+            ((schedule_start + schedule_length) - 1) * num_steps_per_epoch,
+            starting_epsilon,
+            end_epsilon,
+            num_steps_per_epoch
+        )
+    else:
+        epsilon_scheduler = Scheduler(
+            train_config.get("schedule_type", "linear"),
+            schedule_start * num_steps_per_epoch,
+            ((schedule_start + schedule_length) - 1) * num_steps_per_epoch,
+            starting_epsilon,
+            end_epsilon,
+            num_steps_per_epoch
+        )
+        inner_max_scheduler = Scheduler(
+            inner_max_eval.get("schedule_type", "linear"),
+            ((schedule_start + schedule_length) - 1 + inner_max_eval.get(
+                "schedule_start", 0
+            )) * num_steps_per_epoch,
+            ((schedule_start + schedule_length + inner_max_eval.get(
+                "schedule_start", 0
+            ) - 1 + inner_max_eval.get(
+                "schedule_length", schedule_length
+            )) - 1) * num_steps_per_epoch,
+            inner_max_eval.get("c_max", 1),
+            4e-5,
+            num_steps_per_epoch
+        )
+    if warm_up_param:
+        warm_up_start = (
+            (schedule_start + schedule_length) - 1 +
+            warm_up_param.get("schedule_start", 0)
+        ) * num_steps_per_epoch
+        warm_up_end = (warm_up_start + warm_up_param.get(
+            "schedule_length", schedule_length
+        ) - 1) * num_steps_per_epoch
+        post_warm_up_scheduler = Scheduler(
+            warm_up_param.get("schedule_type", "linear"),
+            warm_up_start,
+            warm_up_end,
+            starting_epsilon,
+            end_epsilon,
+            num_steps_per_epoch
+        )
+        if inner_max_eval:
+            inner_max_scheduler = Scheduler(
+                inner_max_eval.get("schedule_type", "linear"),
+                (warm_up_end - 1 + inner_max_eval.get(
+                    "schedule_start", 0
+                )) * num_steps_per_epoch,
+                ((warm_up_end - 1 + inner_max_eval.get("schedule_start", 0) +
+                  inner_max_eval.get(
+                      "schedule_length",
+                      schedule_length)) - 1) * num_steps_per_epoch,
+                inner_max_eval.get("c_max", 1),
+                1e-5,
+                num_steps_per_epoch
+            )
     max_eps = end_epsilon
 
     if lr_decay_step:
@@ -115,15 +181,37 @@ def model_train(config, train_config, model, model_id, model_config):
     if multi_gpu:
         logger.log("\nUsing multiple GPUs for computing IBP bounds\n")
         model = BoundDataParallel(model)
-    model = model.cuda()
-    Train(
-        model, model_id, model_name, best_model_name,
-        epochs, train_data, test_data, multi_gpu,
-        schedule_start, schedule_length,
-        lr_scheduler, lr_decay_step, lr_decay_milestones,
-        epsilon_scheduler, max_eps, norm, logger, verbose,
-        opt, method, method_params, attack_params, evaluation_params
-    )
+        model = model.cuda(device)
+    if not inner_max_eval and not warm_up_param:
+        Train(
+            model, model_id, model_name, best_model_name,
+            epochs, train_data, test_data, multi_gpu,
+            schedule_start, schedule_length,
+            lr_scheduler, lr_decay_step, lr_decay_milestones,
+            epsilon_scheduler, max_eps, norm, logger, verbose,
+            opt, method, method_params, attack_params, evaluation_params
+        )
+    elif inner_max_eval and not warm_up_param:
+        Train(
+            model, model_id, model_name, best_model_name,
+            epochs, train_data, test_data, multi_gpu,
+            schedule_start, schedule_length,
+            lr_scheduler, lr_decay_step, lr_decay_milestones,
+            epsilon_scheduler, max_eps, norm, logger, verbose,
+            opt, method, method_params, attack_params, evaluation_params,
+            inner_max_scheduler=inner_max_scheduler
+        )
+    elif inner_max_scheduler and warm_up_param:
+        Train_with_warmup(
+            model, model_id, model_name, best_model_name,
+            epochs, train_data, test_data, multi_gpu,
+            schedule_start, schedule_length,
+            lr_scheduler, lr_decay_step, lr_decay_milestones,
+            epsilon_scheduler, max_eps, norm, logger, verbose,
+            opt, method, method_params, attack_params, evaluation_params,
+            inner_max_scheduler=inner_max_scheduler,
+            post_warm_up_scheduler=post_warm_up_scheduler
+        )
 
 
 def main(args):

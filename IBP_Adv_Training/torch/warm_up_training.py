@@ -30,14 +30,14 @@ class AverageMeter(object):
         self.avg = self.sum / self.count
 
 
-def Train(
+def Train_with_warmup(
     model, model_id, model_name, best_model_name,
     epochs, train_data, test_data, multi_gpu,
     schedule_start, schedule_length,
     lr_scheduler, lr_decay_step, lr_decay_milestones,
     epsilon_scheduler, max_eps, norm, logger, verbose,
     opt, method, method_params, attack_params, evaluation_params,
-    inner_max_scheduler=None
+    inner_max_scheduler=None, post_warm_up_scheduler=None
 ):
     # initialize logging values
     best_err = np.inf
@@ -54,44 +54,40 @@ def Train(
             last_layer = Layer
             if idxLayer > 0:
                 epsilon_scheduler.init_value = epsilon_scheduler.final_value
-                if inner_max_scheduler is not None:
-                    inner_max_scheduler.final_step = (
-                        inner_max_scheduler.final_step -
-                        inner_max_scheduler.init_step
-                    )
-                    inner_max_scheduler.init_step = 0
+                inner_max_scheduler.final_step = (
+                    inner_max_scheduler.final_step -
+                    inner_max_scheduler.init_step
+                )
+                inner_max_scheduler.init_step = 0
             # Start training
             for t in range(epochs):
                 epoch_start_eps = epsilon_scheduler.get_eps(t, 0)
                 epoch_end_eps = epsilon_scheduler.get_eps(t + 1, 0)
+                post_warm_up_start_eps = post_warm_up_scheduler.get_eps(t, 0)
+                post_warm_up_end_eps = post_warm_up_scheduler.get_eps(t + 1, 0)
+                epoch_start_c_t = inner_max_scheduler.get_eps(t, 0)
                 logger.log(
                     "\n\n==========Training Stage at Layer {}"
                     "==========".format(idxLayer)
                 )
-                if inner_max_scheduler is None:
-                    logger.log(
-                        "Epoch {}, learning rate {}, "
-                        "epsilon: {:.6g} - {:.6g}".format(
-                            t, lr_scheduler.get_lr(),
-                            epoch_start_eps, epoch_end_eps
-                        )
+                logger.log(
+                    "Epoch {}, learning rate {}, "
+                    "epsilon: {:.6g} - {:.6g}, "
+                    "IBP epsilon: {:.6g} - {:.6g}, c_t: {}".format(
+                        t, lr_scheduler.get_lr(),
+                        epoch_start_eps, epoch_end_eps,
+                        post_warm_up_start_eps, post_warm_up_end_eps,
+                        epoch_start_c_t if epoch_start_c_t is not None
+                        else "not started yet"
                     )
-                else:
-                    epoch_start_c_t = inner_max_scheduler.get_eps(t, 0)
-                    logger.log(
-                        "Epoch {}, learning rate {}, "
-                        "epsilon: {:.6g} - {:.6g}, c_t: {}".format(
-                            t, lr_scheduler.get_lr(),
-                            epoch_start_eps, epoch_end_eps,
-                            epoch_start_c_t if epoch_start_c_t is not None
-                            else "not started yet"
-                        )
-                    )
+                )
                 start_time = time.time()
                 epoch_train(
                     model, t, train_data, epsilon_scheduler, max_eps, norm,
                     logger, verbose, True, opt, method, layer_idx=idxLayer,
-                    c_t=epoch_start_c_t, **method_params, **attack_params
+                    c_t=epoch_start_c_t,
+                    post_warm_up_scheduler=post_warm_up_scheduler,
+                    **method_params, **attack_params
                 )
                 if lr_decay_step:
                     # Use stepLR. Note that we manually set up epoch number
@@ -116,7 +112,9 @@ def Train(
                         Scheduler("linear", 0, 0,
                                   evaluation_eps, evaluation_eps, 1),
                         max_eps, norm, logger, verbose, False, None, method,
-                        **method_params, **evaluation_params
+                        post_warm_up_scheduler=Scheduler(
+                            "linear", 0, 0, evaluation_eps, evaluation_eps, 1
+                        ), **method_params, **evaluation_params
                     )
 
                     logger.log("Saving to ", model_name)
@@ -151,7 +149,7 @@ def Train(
 
 def epoch_train(
     model, t, loader, eps_scheduler, max_eps, norm, logger, verbose, train,
-    opt, method, layer_idx=0, c_t=None, **kwargs
+    opt, method, layer_idx=0, c_t=None, post_warm_up_scheduler=None, **kwargs
 ):
     # if train=True, use training mode
     # if train=False, use test mode, no back prop
@@ -193,9 +191,14 @@ def epoch_train(
 
     model_range = 0.0
     end_eps = eps_scheduler.get_eps(t + 1, 0)
-    if end_eps < np.finfo(np.float32).tiny:
+    end_post_warm_up_eps = post_warm_up_scheduler.get_eps(t + 1, 0)
+    if end_eps < np.finfo(np.float32).tiny and \
+            end_post_warm_up_eps < np.finfo(np.float32).tiny:
         logger.log("eps {} close to 0, using natural training".format(end_eps))
         method = "natural"
+    elif end_post_warm_up_eps < np.finfo(np.float32).tiny:
+        logger.log("adversarial training warm up phase")
+        method = "warm_up"
     if kwargs["adversarial_training"]:
         attack = LinfPGDAttack(
             model, kwargs.get("epsilon", max_eps),
@@ -208,6 +211,9 @@ def epoch_train(
         start = time.time()
         intermediate_eps_scheduler = copy.deepcopy(eps_scheduler)
         eps = eps_scheduler.get_eps(t, int(i // batch_multiplier))
+        post_warm_up_eps = post_warm_up_scheduler.get_eps(
+            t, int(i // batch_multiplier)
+        )
         if train and i % batch_multiplier == 0:
             opt.zero_grad()
         # upper bound matrix mask
@@ -232,12 +238,12 @@ def epoch_train(
                 )
             data_max = torch.reshape((1. - mean) / std, (1, -1, 1, 1))
             data_min = torch.reshape((0. - mean) / std, (1, -1, 1, 1))
-            data_ub = torch.min(data + (eps / std), data_max)
-            data_lb = torch.max(data - (eps / std), data_min)
+            data_ub = torch.min(data + (post_warm_up_eps / std), data_max)
+            data_lb = torch.max(data - (post_warm_up_eps / std), data_min)
         else:
             if norm == np.inf:
-                data_ub = data + (eps / std)
-                data_lb = data - (eps / std)
+                data_ub = data + (post_warm_up_eps / std)
+                data_lb = data - (post_warm_up_eps / std)
             else:
                 # For other norms, eps will be used instead
                 data_ub = data_lb = data
@@ -253,12 +259,13 @@ def epoch_train(
             ub_s = ub_s.cuda(device)
 
         # omit the regular cross entropy, since we use robust error
-        if kwargs["adversarial_training"] and method != "natural":
+        if kwargs["adversarial_training"] and method != "natural" and \
+                method != "warm_up":
             output = model(data, method_opt="forward",
                            disable_multi_gpu=(method == "natural"))
             if layer_idx != 0:
                 layer_ub, layer_lb, _, _, _, _ = model(
-                    norm=norm, x_U=data_ub, x_L=data_lb, eps=eps,
+                    norm=norm, x_U=data_ub, x_L=data_lb, eps=post_warm_up_eps,
                     layer_idx=layer_idx, method_opt="interval_range",
                     intermediate=True
                 )
@@ -285,6 +292,13 @@ def epoch_train(
                                    disable_multi_gpu=(method == "natural"))
             # lower bound for adv training
             regular_ce = CrossEntropyLoss()(output_adv, labels)
+        elif method == "warm_up":
+            data_adv, c_eval = attack.perturb(
+                data, labels, epsilon=eps, layer_idx=layer_idx, c_t=c_t
+            )
+            output_adv = model(data_adv, method_opt="forward",
+                               disable_multi_gpu=(method == "natural"))
+            regular_ce = CrossEntropyLoss()(output_adv, labels)
         else:
             output = model(data, method_opt="forward",
                            disable_multi_gpu=(method == "natural"))
@@ -302,7 +316,7 @@ def epoch_train(
         model_range = output.max().detach().cpu().item() - \
             output.min().detach().cpu().item()
 
-        if verbose or method != "natural":
+        if verbose or (method != "natural" and method != "warm_up"):
             if kwargs["bound_type"] == "interval":
                 ub, lb, _, _, _, _ = model(
                     norm=norm, x_U=data_ub, x_L=data_lb, eps=eps, C=c,
@@ -326,7 +340,7 @@ def epoch_train(
                 model.zero_grad()
             else:
                 loss = coeff1 * regular_ce + coeff2 * robust_ce
-        elif method == "natural":
+        elif method == "natural" or method == "warm_up":
             loss = regular_ce
         else:
             raise ValueError("Unknown method " + method)
@@ -338,7 +352,7 @@ def epoch_train(
 
         losses.update(loss.cpu().detach().numpy(), data.size(0))
 
-        if verbose or method != "natural":
+        if verbose or (method != "natural" and method != "warm_up"):
             robust_ce_losses.update(
                 robust_ce.cpu().detach().numpy(), data.size(0)
             )
@@ -360,7 +374,7 @@ def epoch_train(
                 )
             else:
                 pbar.set_description(
-                    'Epoch: {}, eps: {:.3g}, c_eval: no value, '
+                    'Epoch: {}, eps: {:.3g}, '
                     'coeff1: {:.2g}, coeff2: {:.2g}, '
                     'optimal: {}, R: {model_range:.2f}'.format(
                         t, eps,
@@ -392,7 +406,7 @@ def epoch_train(
             re_loss=regular_ce_losses, rb_loss=robust_ce_losses
         )
     )
-    if method == "natural":
+    if method == "natural" or method == "warm_up":
         return errors.avg, errors.avg
     else:
         return robust_errors.avg, errors.avg

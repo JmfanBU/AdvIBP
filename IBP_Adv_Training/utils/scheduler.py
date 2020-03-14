@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class EpsilonScheduler():
+class Scheduler():
     def __init__(
         self, schedule_type, init_step, final_step, init_value, final_value,
         num_steps_per_epoch, mid_point=.25, beta=4.
@@ -14,10 +14,6 @@ class EpsilonScheduler():
         self.mid_point = mid_point
         self.beta = beta
         self.num_steps_per_epoch = num_steps_per_epoch
-        try:
-            assert self.final_value >= self.init_value
-        except ValueError:
-            assert (self.final_value >= self.init_value).all()
         assert self.final_step >= self.init_step
         assert self.beta >= 2.
         assert self.mid_point >= 0. and self.mid_point <= 1.
@@ -84,6 +80,12 @@ class EpsilonScheduler():
     ):
         """Linear schedule."""
         assert final_step >= init_step
+        try:
+            if step < init_step and init_value > final_value:
+                return init_value
+        except ValueError:
+            if step < init_step and (init_value > final_value).all():
+                return init_value
         if init_step == final_step:
             return final_value
         rate = float(step - init_step) / float(final_step - init_step)

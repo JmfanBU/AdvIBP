@@ -7,6 +7,9 @@ import torch
 from IBP_Adv_Training.utils.datasets import loaders
 
 
+device = torch.device("cuda:2")
+
+
 def get_file_close(filename, ext, load=True):
     """
     Helper function to find a file with closest match
@@ -173,7 +176,7 @@ def config_modelloader(config, load_pretrain=False, cuda=False):
         model_params = model_config["model_params"]
         m = model_class(**model_params)
         if cuda:
-            m.cuda()
+            m.cuda(device)
         if load_pretrain:
             model_file = get_path(config, model_id, "model")
             print("Loading model file", model_file)
