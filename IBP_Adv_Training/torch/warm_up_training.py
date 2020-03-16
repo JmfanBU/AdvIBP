@@ -54,6 +54,7 @@ def Train_with_warmup(
             last_layer = Layer
             if idxLayer > 0:
                 epsilon_scheduler.init_value = epsilon_scheduler.final_value
+                post_warm_up_scheduler.init_value = post_warm_up_scheduler.final_value
                 inner_max_scheduler.final_step = (
                     inner_max_scheduler.final_step -
                     inner_max_scheduler.init_step
@@ -93,7 +94,9 @@ def Train_with_warmup(
                     # Use stepLR. Note that we manually set up epoch number
                     # here, so the +1 offset.
                     lr_scheduler.step(epoch=max(
-                        t - (schedule_start + schedule_length - 1) + 1, 0
+                        t - (post_warm_up_scheduler.final_step //
+                             post_warm_up_scheduler.num_steps_per_epoch - 1)
+                        + 1, 0
                     ))
                 elif lr_decay_milestones:
                     # Use MultiStepLR with milestones.
@@ -263,7 +266,7 @@ def epoch_train(
                 method != "warm_up":
             output = model(data, method_opt="forward",
                            disable_multi_gpu=(method == "natural"))
-            if layer_idx != 0:
+            if layer_idx != 0 and train:
                 layer_ub, layer_lb, _, _, _, _ = model(
                     norm=norm, x_U=data_ub, x_L=data_lb, eps=post_warm_up_eps,
                     layer_idx=layer_idx, method_opt="interval_range",
@@ -286,7 +289,8 @@ def epoch_train(
                 )
             else:
                 data_adv, c_eval = attack.perturb(
-                    data, labels, epsilon=eps, layer_idx=layer_idx, c_t=c_t
+                    data, labels, epsilon=eps,
+                    layer_idx=layer_idx if train else 0, c_t=c_t
                 )
                 output_adv = model(data_adv, method_opt="forward",
                                    disable_multi_gpu=(method == "natural"))
@@ -322,7 +326,8 @@ def epoch_train(
             if kwargs["bound_type"] == "interval":
                 ub, lb, _, _, _, _ = model(
                     norm=norm, x_U=data_ub, x_L=data_lb, eps=eps, C=c,
-                    layer_idx=layer_idx, method_opt="interval_range"
+                    layer_idx=layer_idx if train else 0,
+                    method_opt="interval_range"
                 )
             else:
                 raise RuntimeError("Unknown bound_type " +
@@ -434,19 +439,19 @@ def two_obj_gradient(grad1, grad2, c_eval=None, c_t=None):
     if c_t is None:
         c_t = 1e-3
     if dot > 0:
-        if dot >= grad1_norm.pow(2) or dot >= grad2_norm.pow(2):
-            bisector = grad1_normalized + grad2_normalized
-            bisector_norm = bisector.norm()
-            coeff = 0.5 / bisector_norm.pow(2) * \
-                (grad1_norm + grad2_norm + dot / grad1_norm + dot / grad2_norm)
-            coeff1 = coeff / grad1_norm
-            coeff2 = coeff / grad2_norm
-            optimal = "same dir"
-        else:
-            coeff1 = (grad2_norm.pow(2) - dot) / \
-                (grad1_norm.pow(2) + grad2_norm.pow(2) - 2 * dot)
-            coeff2 = 1 - coeff1
-            optimal = True
+        # if dot >= grad1_norm.pow(2) or dot >= grad2_norm.pow(2):
+        bisector = grad1_normalized + grad2_normalized
+        bisector_norm = bisector.norm()
+        coeff = 0.5 / bisector_norm.pow(2) * \
+            (grad1_norm + grad2_norm + dot / grad1_norm + dot / grad2_norm)
+        coeff1 = coeff / grad1_norm
+        coeff2 = coeff / grad2_norm
+        optimal = "same dir"
+        # else:
+        #     coeff1 = (grad2_norm.pow(2) - dot) / \
+        #         (grad1_norm.pow(2) + grad2_norm.pow(2) - 2 * dot)
+        #     coeff2 = 1 - coeff1
+        #     optimal = True
     else:
         optimal = "opposite dir"
         if c_t is not None and c_eval is not None:

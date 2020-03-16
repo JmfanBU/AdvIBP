@@ -122,27 +122,27 @@ def model_train(config, train_config, model, model_id, model_config):
         )
     if warm_up_param:
         warm_up_start = (
-            (schedule_start + schedule_length) - 1 +
+            (schedule_start + schedule_length) +
             warm_up_param.get("schedule_start", 0)
-        ) * num_steps_per_epoch
+        )
         warm_up_end = (warm_up_start + warm_up_param.get(
             "schedule_length", schedule_length
-        ) - 1) * num_steps_per_epoch
+        ) - 1)
         post_warm_up_scheduler = Scheduler(
             warm_up_param.get("schedule_type", "linear"),
-            warm_up_start,
-            warm_up_end,
+            warm_up_start * num_steps_per_epoch,
+            warm_up_end * num_steps_per_epoch,
             starting_epsilon,
-            end_epsilon,
+            0.3,
             num_steps_per_epoch
         )
         if inner_max_eval:
             inner_max_scheduler = Scheduler(
                 inner_max_eval.get("schedule_type", "linear"),
-                (warm_up_end - 1 + inner_max_eval.get(
+                (warm_up_end + inner_max_eval.get(
                     "schedule_start", 0
                 )) * num_steps_per_epoch,
-                ((warm_up_end - 1 + inner_max_eval.get("schedule_start", 0) +
+                ((warm_up_end + inner_max_eval.get("schedule_start", 0) +
                   inner_max_eval.get(
                       "schedule_length",
                       schedule_length)) - 1) * num_steps_per_epoch,
