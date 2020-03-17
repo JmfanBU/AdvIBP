@@ -61,7 +61,9 @@ def Train_with_warmup(
                 post_warm_up_scheduler.init_step = 0
                 post_warm_up_scheduler.final_step = 0
 
-                inner_max_scheduler.init_value = inner_max_scheduler.final_value
+                inner_max_scheduler.init_value = (
+                    inner_max_scheduler.final_value
+                )
                 inner_max_scheduler.final_step = (
                     inner_max_scheduler.final_step -
                     inner_max_scheduler.init_step
@@ -276,11 +278,10 @@ def epoch_train(
                            disable_multi_gpu=(method == "natural"))
             if layer_idx != 0 and train:
                 layer_ub, layer_lb, _, _, _, _ = model(
-                    norm=norm, x_U=data_ub, x_L=data_lb, eps=post_warm_up_eps,
+                    norm=norm, x_U=data_ub, x_L=data_lb, eps=eps,
                     layer_idx=layer_idx, method_opt="interval_range",
                     intermediate=True
                 )
-                data_ub, data_lb = layer_ub, layer_lb
                 layer_eps_scheduler, layer_center, epsilon = intermediate_eps(
                     intermediate_eps_scheduler, layer_ub, layer_lb
                 )
@@ -295,6 +296,12 @@ def epoch_train(
                     data_adv, method_opt="forward", layer_idx=layer_idx,
                     disable_multi_gpu=(method == "natural")
                 )
+                layer_ub, layer_lb, _, _, _, _ = model(
+                    norm=norm, x_U=data_ub, x_L=data_lb, eps=post_warm_up_eps,
+                    layer_idx=layer_idx, method_opt="interval_range",
+                    intermediate=True
+                )
+                data_ub, data_lb = layer_ub, layer_lb
             else:
                 data_adv, c_eval = attack.perturb(
                     data, labels, epsilon=eps,

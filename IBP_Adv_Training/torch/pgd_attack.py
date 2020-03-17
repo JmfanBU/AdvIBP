@@ -69,8 +69,11 @@ class LinfPGDAttack(object):
                     data_grad = data.grad.data
                 # data mask given inner maximization convergence
                 if c_t is not None:
-                    eta = self.a * one_vec[:, None, None, None] * \
-                        data_grad.sign()
+                    if len(data_nat.size()) > 2:
+                        eta = self.a * one_vec[:, None, None, None] * \
+                            data_grad.sign()
+                    else:
+                        eta = self.a * one_vec[:, None] * data_grad.sign()
                 else:
                     eta = self.a * data_grad.sign()
                 data = data.detach().clone() + eta
