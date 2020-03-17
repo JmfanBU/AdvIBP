@@ -7,7 +7,7 @@ import torch
 from IBP_Adv_Training.utils.datasets import loaders
 
 
-device = torch.device("cuda:2")
+device = torch.device("cuda:1")
 
 
 def get_file_close(filename, ext, load=True):
