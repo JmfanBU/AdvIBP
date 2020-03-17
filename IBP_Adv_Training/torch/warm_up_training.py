@@ -61,6 +61,7 @@ def Train_with_warmup(
                 post_warm_up_scheduler.init_step = 0
                 post_warm_up_scheduler.final_step = 0
 
+                inner_max_scheduler.init_value = inner_max_scheduler.final_value
                 inner_max_scheduler.final_step = (
                     inner_max_scheduler.final_step -
                     inner_max_scheduler.init_step
