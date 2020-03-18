@@ -282,6 +282,7 @@ def epoch_train(
                     layer_idx=layer_idx, method_opt="interval_range",
                     intermediate=True
                 )
+                data_ub, data_lb = layer_ub, layer_lb
                 layer_eps_scheduler, layer_center, epsilon = intermediate_eps(
                     intermediate_eps_scheduler, layer_ub, layer_lb
                 )
@@ -335,7 +336,7 @@ def epoch_train(
             if kwargs["bound_type"] == "interval":
                 ub, lb, _, _, _, _ = model(
                     norm=norm, x_U=data_ub, x_L=data_lb, eps=eps, C=c,
-                    layer_idx=0,
+                    layer_idx=layer_idx if train else 0,
                     method_opt="interval_range"
                 )
             else:
