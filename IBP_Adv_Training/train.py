@@ -46,7 +46,7 @@ def model_train(config, train_config, model, model_id, model_config):
     verbose = train_config["verbose"]
     lr_decay_step = train_config["lr_decay_step"]
     if "last_epoch" in train_config:
-        last_epoch = train_config["last_config"]
+        last_epoch = train_config["last_epoch"]
     else:
         last_epoch = -1
     lr_decay_milestones = train_config["lr_decay_milestones"]
