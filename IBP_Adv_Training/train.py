@@ -45,10 +45,6 @@ def model_train(config, train_config, model, model_id, model_config):
     method = train_config["method"]
     verbose = train_config["verbose"]
     lr_decay_step = train_config["lr_decay_step"]
-    if "last_epoch" in train_config:
-        last_epoch = train_config["last_epoch"]
-    else:
-        last_epoch = -1
     lr_decay_milestones = train_config["lr_decay_milestones"]
     lr_decay_factor = train_config["lr_decay_factor"]
     multi_gpu = train_config["multi_gpu"]
@@ -159,8 +155,7 @@ def model_train(config, train_config, model, model_id, model_config):
     if lr_decay_step:
         # Use StepLR. Decay by lr_decay_factor every lr_decay_step.
         lr_scheduler = optim.lr_scheduler.StepLR(
-            opt, step_size=lr_decay_step,
-            gamma=lr_decay_factor, last_epoch=last_epoch
+            opt, step_size=lr_decay_step, gamma=lr_decay_factor
         )
     elif lr_decay_milestones:
         # Decay learning rate by lr_decay_factor at a few milestones
