@@ -278,7 +278,7 @@ def epoch_train(
                            disable_multi_gpu=(method == "natural"))
             if layer_idx != 0 and train:
                 layer_ub, layer_lb, _, _, _, _ = model(
-                    norm=norm, x_U=data_ub, x_L=data_lb, eps=eps,
+                    norm=norm, x_U=data_ub, x_L=data_lb, eps=post_warm_up_eps,
                     layer_idx=layer_idx, method_opt="interval_range",
                     intermediate=True
                 )
@@ -296,12 +296,6 @@ def epoch_train(
                     data_adv, method_opt="forward", layer_idx=layer_idx,
                     disable_multi_gpu=(method == "natural")
                 )
-                layer_ub, layer_lb, _, _, _, _ = model(
-                    norm=norm, x_U=data_ub, x_L=data_lb, eps=post_warm_up_eps,
-                    layer_idx=layer_idx, method_opt="interval_range",
-                    intermediate=True
-                )
-                data_ub, data_lb = layer_ub, layer_lb
             else:
                 data_adv, c_eval = attack.perturb(
                     data, labels, epsilon=eps,
@@ -341,7 +335,7 @@ def epoch_train(
             if kwargs["bound_type"] == "interval":
                 ub, lb, _, _, _, _ = model(
                     norm=norm, x_U=data_ub, x_L=data_lb, eps=eps, C=c,
-                    layer_idx=layer_idx if train else 0,
+                    layer_idx=0,
                     method_opt="interval_range"
                 )
             else:

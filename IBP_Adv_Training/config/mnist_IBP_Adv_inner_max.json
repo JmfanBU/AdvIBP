@@ -8,6 +8,7 @@
         "lr": 5e-4,
         "lr_decay_factor": 0.1,
         "lr_decay_step": 50,
+        "last_epoch": 100,
         "lr_decay_milestones": null,
         "weight_decay": 0.0,
         "optimizer": "adam",
