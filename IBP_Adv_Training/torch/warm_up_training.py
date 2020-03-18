@@ -103,11 +103,12 @@ def Train_with_warmup(
                 if lr_decay_step:
                     # Use stepLR. Note that we manually set up epoch number
                     # here, so the +1 offset.
-                    lr_scheduler.step(epoch=max(
+                    lr_scheduler.step(epoch=min(max(
                         t - (post_warm_up_scheduler.final_step //
                              post_warm_up_scheduler.num_steps_per_epoch - 1)
                         + 1, 0
-                    ))
+                    ), 200 if idxLayer == 0 else 150)
+                    )
                 elif lr_decay_milestones:
                     # Use MultiStepLR with milestones.
                     lr_scheduler.step()
@@ -278,9 +279,9 @@ def epoch_train(
                            disable_multi_gpu=(method == "natural"))
             if layer_idx != 0 and train:
                 layer_ub, layer_lb, _, _, _, _ = model(
-                    norm=norm, x_U=data_ub, x_L=data_lb, eps=post_warm_up_eps,
-                    layer_idx=layer_idx, method_opt="interval_range",
-                    intermediate=True
+                    norm=norm, x_U=data_ub, x_L=data_lb,
+                    eps=post_warm_up_eps, layer_idx=layer_idx,
+                    method_opt="interval_range", intermediate=True
                 )
                 data_ub, data_lb = layer_ub, layer_lb
                 layer_eps_scheduler, layer_center, epsilon = intermediate_eps(
@@ -446,8 +447,6 @@ def two_obj_gradient(grad1, grad2, c_eval=None, c_t=None):
     grad1_normalized = grad1 / grad1_norm
     grad2_normalized = grad2 / grad2_norm
     optimal = False
-    if c_t is None:
-        c_t = 1e-3
     if dot > 0:
         # if dot >= grad1_norm.pow(2) or dot >= grad2_norm.pow(2):
         bisector = grad1_normalized + grad2_normalized
