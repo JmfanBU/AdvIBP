@@ -1,6 +1,5 @@
 import sys
 import copy
-import torch
 import numpy as np
 import torch.optim as optim
 
@@ -117,7 +116,7 @@ def model_train(config, train_config, model, model_id, model_config):
                 "schedule_length", schedule_length
             )) - 1) * num_steps_per_epoch,
             inner_max_eval.get("c_max", 1),
-            4e-5,
+            1e-5,
             num_steps_per_epoch
         )
     if warm_up_param:
