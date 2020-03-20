@@ -132,7 +132,7 @@ def model_train(config, train_config, model, model_id, model_config):
             warm_up_start * num_steps_per_epoch,
             warm_up_end * num_steps_per_epoch,
             starting_epsilon,
-            0.3,
+            end_epsilon,
             num_steps_per_epoch
         )
         if inner_max_eval:

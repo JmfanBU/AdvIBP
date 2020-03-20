@@ -55,6 +55,7 @@ def Train_with_warmup(
             if idxLayer > 0:
                 epsilon_scheduler.init_value = epsilon_scheduler.final_value
 
+                post_warm_up_scheduler.final_value = 0.3
                 post_warm_up_scheduler.init_value = (
                     post_warm_up_scheduler.final_value
                 )
