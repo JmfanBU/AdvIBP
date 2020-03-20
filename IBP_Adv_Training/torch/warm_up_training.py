@@ -70,6 +70,8 @@ def Train_with_warmup(
                 )
                 inner_max_scheduler.init_step = 0
 
+            # Set up moment grad generater
+            moment_grad = two_objective_gradient([0.9] * 4)
             # Start training
             for t in range(epochs):
                 epoch_start_eps = epsilon_scheduler.get_eps(t, 0)
@@ -98,6 +100,7 @@ def Train_with_warmup(
                     logger, verbose, True, opt, method, layer_idx=idxLayer,
                     c_t=epoch_start_c_t,
                     post_warm_up_scheduler=post_warm_up_scheduler,
+                    moment_grad=moment_grad,
                     **method_params, **attack_params
                 )
                 if lr_decay_step:
@@ -162,8 +165,9 @@ def Train_with_warmup(
 
 
 def epoch_train(
-    model, t, loader, eps_scheduler, max_eps, norm, logger, verbose, train,
-    opt, method, layer_idx=0, c_t=None, post_warm_up_scheduler=None, **kwargs
+    model, t, loader, eps_scheduler, max_eps,
+    norm, logger, verbose, train, opt, method, layer_idx=0,
+    c_t=None, post_warm_up_scheduler=None, moment_grad=None, **kwargs
 ):
     # if train=True, use training mode
     # if train=False, use test mode, no back prop
@@ -351,9 +355,14 @@ def epoch_train(
             if train:
                 regular_grads = flat_grad(model, regular_ce)
                 robust_grads = flat_grad(model, robust_ce)
-                coeff1, coeff2, optimal = two_obj_gradient(
-                    regular_grads, robust_grads, c_eval, c_t=c_t
-                )
+                if moment_grad is None:
+                    coeff1, coeff2, optimal = two_obj_gradient(
+                        regular_grads, robust_grads, c_eval=c_eval, c_t=c_t
+                    )
+                else:
+                    coeff1, coeff2, optimal = moment_grad.compute_coeffs(
+                        regular_grads, robust_grads, c_eval=c_eval, c_t=c_t
+                    )
                 loss = coeff1 * regular_ce + coeff2 * robust_ce
                 model.zero_grad()
             else:
@@ -490,6 +499,101 @@ def two_obj_gradient(grad1, grad2, c_eval=None, c_t=None):
             else:
                 coeff2 = -dot / grad2_norm.pow(2)
     return coeff1, coeff2, optimal
+
+
+class two_objective_gradient(object):
+    def __init__(self, betas):
+        # steps counter
+        self.steps = 0
+
+        # decay parameters
+        self.beta1 = betas[0]
+        self.beta2 = betas[1]
+        self.beta3 = betas[2]
+        self.beta4 = betas[3]
+
+        # initialize the moment variables
+        self.grad1 = 0.
+        self.grad2 = 0.
+        self.grad1_norm = 0.
+        self.grad2_norm = 0.
+
+    def moment_estimate(self, grad1, grad2):
+        """
+        Update the moment variables given new sampled gradients
+        """
+        # Update biased moment estimate
+        self.grad1 = (
+            self.beta1 * self.grad1 + (1 - self.beta1) * grad1
+        ).detach().clone()
+        self.grad2 = (
+            self.beta2 * self.grad2 + (1 - self.beta2) * grad2
+        ).detach().clone()
+        self.grad1_norm = (
+            self.beta3 * self.grad1_norm + (1 - self.beta3) * grad1.norm()
+        ).detach().clone()
+        self.grad2_norm = (
+            self.beta4 * self.grad2_norm + (1 - self.beta4) * grad2.norm()
+        ).detach().clone()
+
+        # Compute biased-corrected moment estimate
+        grad1_hat = self.grad1 / (1 - np.power(self.beta1, self.steps))
+        grad2_hat = self.grad2 / (1 - np.power(self.beta2, self.steps))
+        grad1_norm_hat = self.grad1_norm / \
+            (1 - np.power(self.beta3, self.steps))
+        grad2_norm_hat = self.grad2_norm / \
+            (1 - np.power(self.beta4, self.steps))
+
+        return grad1_hat, grad2_hat, grad1_norm_hat, grad2_norm_hat
+
+    def compute_coeffs(self, g1, g2, c_eval=None, c_t=None):
+        # count step
+        self.steps += 1
+        # Obtain moment estimate
+        grad1, grad2, grad1_norm, grad2_norm = self.moment_estimate(g1, g2)
+        # Compute dot product and normalized gradient
+        dot = torch.dot(grad1, grad2)
+        grad1_normalized = grad1 / grad1_norm
+        grad2_normalized = grad2 / grad2_norm
+        optimal = False
+        # Two objective gradient
+        if dot > 0:
+            bisector = grad1_normalized + grad2_normalized
+            bisector_norm = bisector.norm()
+            coeff = 0.5 / bisector_norm.pow(2) * \
+                (grad1_norm + grad2_norm + dot / grad1_norm + dot / grad2_norm)
+            coeff1 = coeff / grad1_norm
+            coeff2 = coeff / grad2_norm
+            optimal = "same dir"
+        else:
+            optimal = "opposite dir"
+            if c_t is not None and c_eval is not None:
+                if c_eval <= c_t:
+                    coeff1 = 1.
+                    if grad2_norm == 0:
+                        optimal = "second obj grad vanishes"
+                        coeff2 = 0.
+                    else:
+                        coeff2 = -dot / grad2_norm.pow(2)
+                else:
+                    coeff2 = 1.
+                    if grad1_norm == 0:
+                        coeff1 = 0.
+                        optimal = "first obj grad vanishes"
+                    else:
+                        coeff1 = -dot / grad1_norm.pow(2)
+            else:
+                coeff1 = 1.
+                if grad2_norm == 0.:
+                    optimal = "second obj grad vanishes"
+                    coeff2 = 0.
+                elif grad1_norm == 0.:
+                    optimal = "first obj grad vanishes"
+                    coeff1 = 0.
+                    coeff2 = 1.
+                else:
+                    coeff2 = -dot / grad2_norm.pow(2)
+        return coeff1, coeff2, optimal
 
 
 def normalize(coeff1, coeff2):
