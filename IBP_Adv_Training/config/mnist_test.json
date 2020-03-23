@@ -1,7 +1,7 @@
 {
     "network_model": "network.py",
     "dataset": "mnist",
-    "models_path": "./mnist_small_03_04_test/",
+    "models_path": "./mnist_small_03_04_new_test/",
     "training_params": {
         "method": "robust",
         "epochs": 250,

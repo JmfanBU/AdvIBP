@@ -4,7 +4,7 @@
     "models_path": "./mnist_IBP_Large_03_04/",
     "training_params": {
         "method": "robust",
-        "epochs": 200,
+        "epochs": 250,
         "lr": 5e-4,
         "lr_decay_factor": 0.1,
         "lr_decay_step": 50,
@@ -14,11 +14,13 @@
         "starting_epsilon": 0.0,
         "epsilon": 0.4,
         "schedule_start": 10,
-        "schedule_length": 51,
+        "schedule_length": 40,
         "schedule_type": "smoothed",
         "norm": "inf",
         "verbose": false,
         "multi_gpu": true,
+        "warm_up": {"schedule_start": 0, "schedule_length": 50, "schedule_type": "smoothed"},
+        "inner_max_eval": {"schedule_start": 10, "schedule_length": 50, "schedule_type": "linear", "c_max": 1e-3},
         "loader_params": {"batch_size": 256, "test_batch_size": 256, "shuffle_train": true},
         "method_params": {"bounded_input": true, "bound_type": "interval", "batch_multiplier": 1, "adversarial_training": true}
     },
@@ -31,7 +33,7 @@
     },
     "eval_params": {
         "epsilon": 0.3,
-        "attack_steps": 200,
+        "attack_steps": 1,
         "attack_stepsize": 0.03,
         "random_start": true,
         "loss_func": "ce",

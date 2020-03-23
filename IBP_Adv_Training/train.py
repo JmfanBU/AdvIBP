@@ -24,6 +24,54 @@ class Logger(object):
             self.log_file.flush()
 
 
+class optimizer_config(object):
+    def __init__(
+        self, opt_method, model, lr, weight_decay,
+        lr_decay_factor, lr_decay_step=None, lr_decay_milestones=None
+    ):
+        self.opt_method = opt_method
+        self.model = model
+        self.lr = lr
+        self.weight_decay = weight_decay
+        self.lr_decay_factor = lr_decay_factor
+        self.lr_decay_step = lr_decay_step
+        self.lr_decay_milestones = lr_decay_milestones
+
+    def get_opt(self):
+        if self.opt_method == 'adam':
+            opt = optim.Adam(
+                self.model.parameters(), lr=self.lr,
+                weight_decay=self.weight_decay
+            )
+        elif self.opt_method == 'sgd':
+            opt = optim.SGD(
+                self.model.parameters(), lr=self.lr, momentum=0.9,
+                nesterov=True, weight_decay=self.weight_decay
+            )
+        else:
+            raise ValueError("Unknown optimizer")
+
+        if self.lr_decay_step:
+            # Use StepLR. Decay by lr_decay_factor every lr_decay_step.
+            lr_scheduler = optim.lr_scheduler.StepLR(
+                opt, step_size=self.lr_decay_step,
+                gamma=self.lr_decay_factor
+            )
+        elif self.lr_decay_milestones:
+            # Decay learning rate by lr_decay_factor at a few milestones
+            lr_scheduler = optim.lr_scheduler.MultiStepLR(
+                opt, milestones=self.lr_decay_milestones,
+                gamma=self.lr_decay_factor
+            )
+        else:
+            raise ValueError(
+                "one of lr_decay_step and"
+                "lr_decay_milestones must be not empty."
+            )
+
+        return opt, lr_scheduler
+
+
 def model_train(config, train_config, model, model_id, model_config):
     if "traininig_params" in model_config:
         train_config = update_dict(train_config,
@@ -68,17 +116,8 @@ def model_train(config, train_config, model, model_id, model_config):
         config, **train_config["loader_params"]
     )
 
-    if optimizer == 'adam':
-        opt = optim.Adam(
-            model.parameters(), lr=lr, weight_decay=weight_decay
-        )
-    elif optimizer == 'sgd':
-        opt = optim.SGD(
-            model.parameters(), lr=lr, momentum=0.9,
-            nesterov=True, weight_decay=weight_decay
-        )
-    else:
-        raise ValueError("Unknown optimizer")
+    opt = optimizer_config(optimizer, model, lr, weight_decay,
+                           lr_decay_factor, lr_decay_step, lr_decay_milestones)
 
     batch_multiplier = train_config["method_params"].get(
         "batch_multiplier", 1
@@ -151,21 +190,6 @@ def model_train(config, train_config, model, model_id, model_config):
             )
     max_eps = end_epsilon
 
-    if lr_decay_step:
-        # Use StepLR. Decay by lr_decay_factor every lr_decay_step.
-        lr_scheduler = optim.lr_scheduler.StepLR(
-            opt, step_size=lr_decay_step, gamma=lr_decay_factor
-        )
-    elif lr_decay_milestones:
-        # Decay learning rate by lr_decay_factor at a few milestones
-        lr_scheduler = optim.lr_scheduler.MultiStepLR(
-            opt, milestones=lr_decay_milestones, gamma=lr_decay_factor
-        )
-    else:
-        raise ValueError(
-            "one of lr_decay_step and"
-            "lr_decay_milestones must be not empty."
-        )
     model_name = get_path(config, model_id, "model", load=False)
     best_model_name = get_path(config, model_id, "best_model", load=False)
     model_log = get_path(config, model_id, "train_log")
@@ -186,7 +210,7 @@ def model_train(config, train_config, model, model_id, model_config):
             model, model_id, model_name, best_model_name,
             epochs, train_data, test_data, multi_gpu,
             schedule_start, schedule_length,
-            lr_scheduler, lr_decay_step, lr_decay_milestones,
+            lr_decay_step, lr_decay_milestones,
             epsilon_scheduler, max_eps, norm, logger, verbose,
             opt, method, method_params, attack_params, evaluation_params
         )
@@ -195,7 +219,7 @@ def model_train(config, train_config, model, model_id, model_config):
             model, model_id, model_name, best_model_name,
             epochs, train_data, test_data, multi_gpu,
             schedule_start, schedule_length,
-            lr_scheduler, lr_decay_step, lr_decay_milestones,
+            lr_decay_step, lr_decay_milestones,
             epsilon_scheduler, max_eps, norm, logger, verbose,
             opt, method, method_params, attack_params, evaluation_params,
             inner_max_scheduler=inner_max_scheduler
@@ -205,7 +229,7 @@ def model_train(config, train_config, model, model_id, model_config):
             model, model_id, model_name, best_model_name,
             epochs, train_data, test_data, multi_gpu,
             schedule_start, schedule_length,
-            lr_scheduler, lr_decay_step, lr_decay_milestones,
+            lr_decay_step, lr_decay_milestones,
             epsilon_scheduler, max_eps, norm, logger, verbose,
             opt, method, method_params, attack_params, evaluation_params,
             inner_max_scheduler=inner_max_scheduler,

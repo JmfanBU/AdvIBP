@@ -34,9 +34,9 @@ def Train_with_warmup(
     model, model_id, model_name, best_model_name,
     epochs, train_data, test_data, multi_gpu,
     schedule_start, schedule_length,
-    lr_scheduler, lr_decay_step, lr_decay_milestones,
+    lr_decay_step, lr_decay_milestones,
     epsilon_scheduler, max_eps, norm, logger, verbose,
-    opt, method, method_params, attack_params, evaluation_params,
+    opt_config, method, method_params, attack_params, evaluation_params,
     inner_max_scheduler=None, post_warm_up_scheduler=None
 ):
     # initialize logging values
@@ -52,10 +52,14 @@ def Train_with_warmup(
                 for param in last_layer.parameters():
                     param.requires_grad = False
             last_layer = Layer
+
+            # Set up optimizer and lr decay scheduler
+            opt, lr_scheduler = opt_config.get_opt()
+            # Set up moment grad generater
+            moment_grad = two_objective_gradient([0.9] * 4)
             if idxLayer > 0:
                 epsilon_scheduler.init_value = epsilon_scheduler.final_value
 
-                post_warm_up_scheduler.final_value = 0.3
                 post_warm_up_scheduler.init_value = (
                     post_warm_up_scheduler.final_value
                 )
@@ -71,8 +75,6 @@ def Train_with_warmup(
                 )
                 inner_max_scheduler.init_step = 0
 
-            # Set up moment grad generater
-            moment_grad = two_objective_gradient([0.9] * 4)
             # Start training
             for t in range(epochs):
                 epoch_start_eps = epsilon_scheduler.get_eps(t, 0)
