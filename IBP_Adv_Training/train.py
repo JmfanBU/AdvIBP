@@ -155,7 +155,7 @@ def model_train(config, train_config, model, model_id, model_config):
                 "schedule_length", schedule_length
             )) - 1) * num_steps_per_epoch,
             inner_max_eval.get("c_max", 1),
-            1e-5,
+            inner_max_eval.get("c_min", 1e-5),
             num_steps_per_epoch
         )
     if warm_up_param:
@@ -185,7 +185,7 @@ def model_train(config, train_config, model, model_id, model_config):
                       "schedule_length",
                       schedule_length)) - 1) * num_steps_per_epoch,
                 inner_max_eval.get("c_max", 1),
-                1e-5,
+                inner_max_eval.get("c_min", 1e-5),
                 num_steps_per_epoch
             )
     max_eps = end_epsilon
