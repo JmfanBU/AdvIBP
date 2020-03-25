@@ -145,7 +145,7 @@ def Train_with_warmup(
                     }, model_name)
 
                     # save the best model after we reached schedule
-                    if t >= (schedule_start + schedule_length):
+                    if t >= (schedule_start + schedule_length) or idxLayer > 0:
                         if err <= best_err:
                             best_err = err
                             recorded_clean_err = clean_err

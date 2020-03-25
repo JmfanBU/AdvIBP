@@ -6,7 +6,7 @@
         "method": "robust",
         "epochs": 250,
         "lr": 5e-4,
-        "lr_decay_factor": 0.1,
+        "lr_decay_factor": 0.25,
         "lr_decay_step": 50,
         "lr_decay_milestones": null,
         "weight_decay": 0.0,
@@ -20,7 +20,7 @@
         "verbose": false,
         "multi_gpu": true,
         "warm_up": {"schedule_start": 0, "schedule_length": 50, "schedule_type": "smoothed"},
-        "inner_max_eval": {"schedule_start": 10, "schedule_length": 50, "schedule_type": "linear", "c_max": 1e-3},
+        "inner_max_eval": {"schedule_start": 10, "schedule_length": 50, "schedule_type": "linear", "c_max": 1e-3, "c_min": 1e-5},
         "loader_params": {"batch_size": 256, "test_batch_size": 256, "shuffle_train": true},
         "method_params": {"bounded_input": true, "bound_type": "interval", "batch_multiplier": 1, "adversarial_training": true}
     },
