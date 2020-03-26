@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 from torch.nn import CrossEntropyLoss
 from IBP_Adv_Training.utils.config import device
 
