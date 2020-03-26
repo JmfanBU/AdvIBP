@@ -29,9 +29,7 @@
         "attack_steps": 10,
         "attack_stepsize": 0.03,
         "random_start": true,
-        "loss_func": "ce",
-        "mean": [0.4914, 0.4822, 0.4465],
-        "std": [0.2023, 0.1994, 0.2010]
+        "loss_func": "ce"
     },
     "eval_params": {
         "epsilon": 0.0317,

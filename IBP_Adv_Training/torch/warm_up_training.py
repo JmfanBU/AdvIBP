@@ -225,7 +225,7 @@ def epoch_train(
             model, kwargs.get("epsilon", max_eps),
             kwargs["attack_steps"], kwargs["attack_stepsize"],
             kwargs["random_start"], kwargs["loss_func"],
-            mean=kwargs["mean"], std=kwargs["std"]
+            mean=mean, std=std
         )
 
     pbar = tqdm(loader)

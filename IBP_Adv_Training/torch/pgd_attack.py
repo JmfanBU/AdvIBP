@@ -1,5 +1,4 @@
 import torch
-import numpy as np
 from torch.nn import CrossEntropyLoss
 from IBP_Adv_Training.utils.config import device
 
@@ -17,8 +16,8 @@ class LinfPGDAttack(object):
         self.a = a
         self.rand = random_start
         self.loss_func = loss_func
-        self.mean = np.array(mean)
-        self.std = np.array(std)
+        self.mean = mean
+        self.std = std
 
     def loss(self, output, labels):
         if self.loss_func == 'ce':
