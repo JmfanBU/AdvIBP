@@ -32,9 +32,9 @@ class LinfPGDAttack(object):
             one_vec = torch.ones(batch_size).cuda(device)
         with torch.enable_grad():
             if epsilon is not None:
-                eps = epsilon
+                eps = epsilon / self.std
             else:
-                eps = self.epsilon
+                eps = self.epsilon / self.std
 
             if self.rand:
                 try:
@@ -45,7 +45,10 @@ class LinfPGDAttack(object):
                         ).cuda(device)
                     )
                 except TypeError:
-                    eps = torch.from_numpy(eps).cuda(device)
+                    if not torch.is_tensor(eps):
+                        eps = torch.from_numpy(eps).cuda(device)
+                    else:
+                        eps = eps.cuda(device)
                     data = data_nat.detach().clone() + \
                         torch.rand_like(eps) * 2 * eps - eps
             else:
