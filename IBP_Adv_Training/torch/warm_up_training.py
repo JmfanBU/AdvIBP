@@ -113,7 +113,7 @@ def Train_with_warmup(
                         t - (post_warm_up_scheduler.final_step //
                              post_warm_up_scheduler.num_steps_per_epoch - 1)
                         + 1, 0
-                    ), 251 if idxLayer == 0 else 101)
+                    ), 2921 if idxLayer == 0 else 1001)
                     )
                 elif lr_decay_milestones:
                     # Use MultiStepLR with milestones.
