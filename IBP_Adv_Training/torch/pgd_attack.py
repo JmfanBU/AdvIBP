@@ -16,8 +16,8 @@ class LinfPGDAttack(object):
         self.a = a
         self.rand = random_start
         self.loss_func = loss_func
-        self.mean = mean
-        self.std = std
+        self.mean = mean.cuda(device)
+        self.std = std.cuda(device)
 
     def loss(self, output, labels):
         if self.loss_func == 'ce':
