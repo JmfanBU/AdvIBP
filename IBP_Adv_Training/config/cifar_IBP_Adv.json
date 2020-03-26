@@ -21,7 +21,7 @@
         "multi_gpu": false,
         "warm_up": {"schedule_start": 0, "schedule_length": 50, "schedule_type": "smoothed"},
         "inner_max_eval": {"schedule_start": 10, "schedule_length": 50, "schedule_type": "linear", "c_max": 1e-3, "c_min": 1e-5},
-        "loader_params": {"batch_size": 256, "test_batch_size": 256, "shuffle_train": true, "train_random_transform": true, "normalize_input": true},
+        "loader_params": {"batch_size": 1024, "test_batch_size": 256, "shuffle_train": true, "train_random_transform": true, "normalize_input": true},
         "method_params": {"bounded_input": true, "bound_type": "interval", "batch_multiplier": 1, "adversarial_training": true}
     },
     "attack_params": {
