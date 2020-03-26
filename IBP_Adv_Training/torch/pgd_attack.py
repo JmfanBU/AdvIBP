@@ -4,7 +4,8 @@ from IBP_Adv_Training.utils.config import device
 
 
 class LinfPGDAttack(object):
-    def __init__(self, model, epsilon, k, a, random_start, loss_func):
+    def __init__(self, model, epsilon, k, a,
+                 random_start, loss_func, mean=0., std=1.):
         """
         Attack parameter initialization. The attack performs k steps of size a,
         while always staying within epsilon from the initial
@@ -15,6 +16,8 @@ class LinfPGDAttack(object):
         self.a = a
         self.rand = random_start
         self.loss_func = loss_func
+        self.mean = mean
+        self.std = std
 
     def loss(self, output, labels):
         if self.loss_func == 'ce':
@@ -81,7 +84,12 @@ class LinfPGDAttack(object):
                     eta = torch.clamp(data - data_nat, -eps, eps)
                 except TypeError:
                     eta = torch.max(torch.min(data - data_nat, eps), -eps)
-                data = torch.clamp(data_nat + eta, 0.0, 1.0)
+                if layer_idx == 0:
+                    data = torch.clamp(data_nat + eta,
+                                       (0. - self.mean) / self.std,
+                                       (1. - self.mean) / self.std)
+                else:
+                    data = data_nat + eta
 
                 data.requires_grad_()
                 output = self.model(
