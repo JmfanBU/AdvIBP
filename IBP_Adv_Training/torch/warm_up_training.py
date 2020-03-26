@@ -224,7 +224,8 @@ def epoch_train(
         attack = LinfPGDAttack(
             model, kwargs.get("epsilon", max_eps),
             kwargs["attack_steps"], kwargs["attack_stepsize"],
-            kwargs["random_start"], kwargs["loss_func"]
+            kwargs["random_start"], kwargs["loss_func"],
+            mean=kwargs["mean"], std=kwargs["std"]
         )
 
     pbar = tqdm(loader)
