@@ -88,9 +88,10 @@ class LinfPGDAttack(object):
                 except TypeError:
                     eta = torch.max(torch.min(data - data_nat, eps), -eps)
                 if layer_idx == 0:
-                    data = torch.clamp(data_nat + eta,
-                                       (0. - self.mean) / self.std,
-                                       (1. - self.mean) / self.std)
+                    data = torch.max(
+                        torch.min(data_nat + eta, (1. - self.mean) / self.std),
+                        (0. - self.mean) / self.std
+                    )
                 else:
                     data = data_nat + eta
 
