@@ -116,9 +116,15 @@ class LinfPGDAttack(object):
 
     def FOSC(self, data, data_nat, eps):
         batch_size = data_nat.size(0)
-        if torch.is_tensor(eps) and eps.size(0) == batch_size:
+        if torch.is_tensor(eps) and \
+                eps.ndim != 0 and eps.size(0) == batch_size:
             c_x = (eps.view(batch_size, -1) *
                    data.grad.data.view(batch_size, -1)).norm(p=1, dim=1) - \
+                ((data - data_nat).view(batch_size, -1) *
+                 data.grad.data.view(batch_size, -1)).sum(dim=1)
+        elif torch.is_tensor(eps) and eps.ndim != 0:
+            c_x = (eps[None, :, None, None] *
+                   data.grad.data).view(batch_size, -1).norm(p=1, dim=1) - \
                 ((data - data_nat).view(batch_size, -1) *
                  data.grad.data.view(batch_size, -1)).sum(dim=1)
         else:
