@@ -1,6 +1,5 @@
 import time
 from tqdm import tqdm
-import copy
 import torch
 import numpy as np
 
@@ -231,7 +230,6 @@ def epoch_train(
     pbar = tqdm(loader)
     for i, (data, labels) in enumerate(pbar):
         start = time.time()
-        intermediate_eps_scheduler = copy.deepcopy(eps_scheduler)
         eps = eps_scheduler.get_eps(t, int(i // batch_multiplier))
         post_warm_up_eps = post_warm_up_scheduler.get_eps(
             t, int(i // batch_multiplier)
@@ -292,12 +290,10 @@ def epoch_train(
                     method_opt="interval_range", intermediate=True
                 )
                 data_ub, data_lb = layer_ub, layer_lb
-                layer_eps_scheduler, layer_center, epsilon = intermediate_eps(
-                    intermediate_eps_scheduler, layer_ub, layer_lb
+                layer_center, epsilon = intermediate_eps(
+                    layer_ub, layer_lb
                 )
-                layer_eps = layer_eps_scheduler.get_eps(
-                    t, int(i // batch_multiplier)
-                )
+                layer_eps = epsilon
                 data_adv, c_eval = attack.perturb(
                     layer_center, labels, epsilon=layer_eps,
                     layer_idx=layer_idx, c_t=c_t
@@ -443,14 +439,12 @@ def epoch_train(
         return robust_errors.avg, errors.avg
 
 
-def intermediate_eps(eps_scheduler, layer_ub, layer_lb):
+def intermediate_eps(layer_ub, layer_lb):
     # assert (layer_lb <= layer_ub).all()
     # center of the intermediate layer set
     intermediate_center = (layer_lb + layer_ub) / 2
     epsilon = (layer_ub - intermediate_center).abs()
-    eps_scheduler.init_value = epsilon.detach().cpu().numpy()
-    eps_scheduler.final_value = epsilon.detach().cpu().numpy()
-    return eps_scheduler, intermediate_center, epsilon
+    return intermediate_center, epsilon
 
 
 def two_obj_gradient(grad1, grad2, c_eval=None, c_t=None):
