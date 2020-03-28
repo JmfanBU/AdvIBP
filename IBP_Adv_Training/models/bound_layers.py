@@ -25,8 +25,7 @@ class BoundFlatten(nn.Module):
 
     def interval_propagate(self, norm, h_U, h_L, eps):
         return (
-            norm, h_U.view(h_U.size(0), -1), h_L.view(h_L.size(0), -1),
-            0, 0, 0, 0
+            norm, h_U.view(h_U.size(0), -1), h_L.view(h_L.size(0), -1)
         )
 
 
@@ -90,7 +89,7 @@ class BoundLinear(Linear):
         upper = center + deviation
         lower = center - deviation
 
-        return np.inf, upper, lower, 0, 0, 0, 0
+        return np.inf, upper, lower
 
 
 class BoundConv2d(Conv2d):
@@ -151,7 +150,7 @@ class BoundConv2d(Conv2d):
         logger.debug('center %s', center.size())
         upper = center + deviation
         lower = center - deviation
-        return np.inf, upper, lower, 0, 0, 0, 0
+        return np.inf, upper, lower
 
 
 class BoundReLU(ReLU):
@@ -167,15 +166,11 @@ class BoundReLU(ReLU):
 
     def interval_propagate(self, norm, h_U, h_L, eps):
         assert norm == np.inf
-        guard_eps = 1e-5
-        self.unstab = ((h_L < -guard_eps) & (h_U > guard_eps))
         # stored upper and lower bounds will be used for backward bound
         # propagation
         self.upper_u = h_U
         self.lower_l = h_L
-        tightness_loss = self.unstab.sum()
-        return norm, F.relu(h_U), F.relu(h_L), tightness_loss, tightness_loss,\
-            (h_U < 0).sum(), (h_L > 0).sum()
+        return norm, F.relu(h_U), F.relu(h_L)
 
 
 class BoundSequential(Sequential):
@@ -234,10 +229,6 @@ class BoundSequential(Sequential):
         self, norm=np.inf, x_U=None, x_L=None,
         eps=None, C=None, layer_idx=0, intermediate=False
     ):
-        losses = 0
-        unstable = 0
-        dead = 0
-        alive = 0
         h_U = x_U
         h_L = x_L
         if not intermediate:
@@ -246,37 +237,23 @@ class BoundSequential(Sequential):
             ):
                 # all internal layers should have Linf norm, except for
                 # the first layer
-                norm, h_U, h_L, loss, uns, d, a = module.interval_propagate(
+                norm, h_U, h_L = module.interval_propagate(
                     norm, h_U, h_L, eps
                 )
-                # this is some stability loss used for initial experiemnts,
-                # but not used in IBP_Adv_Training
-                losses += loss
-                unstable += uns
-                dead += d
-                alive += a
         else:
             for i, module in enumerate(
                 list(self._modules.values())[:layer_idx]
             ):
-                norm, h_U, h_L, loss, uns, d, a = module.interval_propagate(
+                norm, h_U, h_L = module.interval_propagate(
                     norm, h_U, h_L, eps
                 )
-                losses += loss
-                unstable += uns
-                dead += d
-                alive += a
-
-            return h_U, h_L, losses, unstable, dead, alive
+            return h_U, h_L
         # last layer has C to merge
-        norm, h_U, h_L, loss, uns, d, a = list(
+        norm, h_U, h_L = list(
             self._modules.values()
         )[-1].interval_propagate(norm, h_U, h_L, eps, C)
-        losses += loss
-        unstable += uns
-        dead += d
-        alive += a
-        return h_U, h_L, losses, unstable, dead, alive
+
+        return h_U, h_L
 
 
 class BoundDataParallel(DataParallel):

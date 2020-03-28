@@ -129,11 +129,11 @@ def IBP_large(in_ch, in_dim, linear_size=512):
 
 def IBP_debug(in_ch, in_dim, linear_size=512):
     model = nn.Sequential(
-        nn.Conv2d(1, 1, 3, stride=2, padding=1),
-        nn.ReLU(),
-        nn.Conv2d(1, 1, 3, stride=2, padding=1),
-        nn.ReLU(),
         Flatten(),
-        nn.Linear((in_dim // 4) * (in_dim // 4) * 1, 10)
+        nn.Linear(in_ch * in_dim * in_dim, linear_size),
+        nn.ReLU(),
+        nn.Linear(linear_size, linear_size),
+        nn.ReLU(),
+        nn.Linear(linear_size, 10)
     )
     return model

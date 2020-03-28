@@ -284,7 +284,7 @@ def epoch_train(
             output = model(data, method_opt="forward",
                            disable_multi_gpu=(method == "natural"))
             if layer_idx != 0 and train:
-                layer_ub, layer_lb, _, _, _, _ = model(
+                layer_ub, layer_lb = model(
                     norm=norm, x_U=data_ub, x_L=data_lb,
                     eps=post_warm_up_eps, layer_idx=layer_idx,
                     method_opt="interval_range", intermediate=True
@@ -339,7 +339,7 @@ def epoch_train(
 
         if verbose or (method != "natural" and method != "warm_up"):
             if kwargs["bound_type"] == "interval":
-                ub, lb, _, _, _, _ = model(
+                ub, lb = model(
                     norm=norm, x_U=data_ub, x_L=data_lb, eps=eps, C=c,
                     layer_idx=layer_idx if train else 0,
                     method_opt="interval_range"
