@@ -32,9 +32,15 @@ class LinfPGDAttack(object):
             one_vec = torch.ones(batch_size).cuda(device)
         with torch.enable_grad():
             if epsilon is not None:
-                eps = epsilon / self.std
+                if layer_idx == 0:
+                    eps = epsilon / self.std
+                else:
+                    eps = epsilon
             else:
-                eps = self.epsilon / self.std
+                if layer_idx == 0:
+                    eps = self.epsilon / self.std
+                else:
+                    eps = self.epsilon
 
             if self.rand:
                 try:
