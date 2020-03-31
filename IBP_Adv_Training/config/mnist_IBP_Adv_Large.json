@@ -6,7 +6,7 @@
         "method": "robust",
         "epochs": 250,
         "lr": 5e-4,
-        "lr_decay_factor": 0.1,
+        "lr_decay_factor": 0.25,
         "lr_decay_step": 50,
         "lr_decay_milestones": null,
         "weight_decay": 0.0,
