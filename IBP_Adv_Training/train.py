@@ -27,7 +27,8 @@ class Logger(object):
 class optimizer_config(object):
     def __init__(
         self, opt_method, model, lr, weight_decay,
-        lr_decay_factor, lr_decay_step=None, lr_decay_milestones=None
+        lr_decay_factor, lr_decay_step=None, lr_decay_milestones=None,
+        lr_decay_milestones_post_layer=None
     ):
         self.opt_method = opt_method
         self.model = model
@@ -36,8 +37,14 @@ class optimizer_config(object):
         self.lr_decay_factor = lr_decay_factor
         self.lr_decay_step = lr_decay_step
         self.lr_decay_milestones = lr_decay_milestones
+        if lr_decay_milestones_post_layer is not None:
+            self.lr_decay_milestones_post_layer = (
+                lr_decay_milestones_post_layer
+            )
+        else:
+            self.lr_decay_milestones_post_layer = self.lr_decay_milestones
 
-    def get_opt(self):
+    def get_opt(self, idxLayer):
         if self.opt_method == 'adam':
             opt = optim.Adam(
                 self.model.parameters(), lr=self.lr,
@@ -57,12 +64,19 @@ class optimizer_config(object):
                 opt, step_size=self.lr_decay_step,
                 gamma=self.lr_decay_factor
             )
-        elif self.lr_decay_milestones:
+        elif self.lr_decay_milestones and idxLayer == 0:
             # Decay learning rate by lr_decay_factor at a few milestones
             lr_scheduler = optim.lr_scheduler.MultiStepLR(
                 opt, milestones=self.lr_decay_milestones,
                 gamma=self.lr_decay_factor
             )
+        elif self.lr_decay_milestones_post_layer and idxLayer != 0:
+            # Decay learning rate by lr_decay_factor at a few milestones
+            lr_scheduler = optim.lr_scheduler.MultiStepLR(
+                opt, milestones=self.lr_decay_milestones_post_layer,
+                gamma=self.lr_decay_factor
+            )
+
         else:
             raise ValueError(
                 "one of lr_decay_step and"
@@ -93,6 +107,12 @@ def model_train(config, train_config, model, model_id, model_config):
     verbose = train_config["verbose"]
     lr_decay_step = train_config["lr_decay_step"]
     lr_decay_milestones = train_config["lr_decay_milestones"]
+    if "lr_decay_milestones_post_layer" in train_config:
+        lr_decay_milestones_post_layer = train_config[
+            "lr_decay_milestones_post_layer"
+        ]
+    else:
+        lr_decay_milestones_post_layer = None
     lr_decay_factor = train_config["lr_decay_factor"]
     multi_gpu = train_config["multi_gpu"]
     # parameters for the training method
@@ -117,7 +137,8 @@ def model_train(config, train_config, model, model_id, model_config):
     )
 
     opt = optimizer_config(optimizer, model, lr, weight_decay,
-                           lr_decay_factor, lr_decay_step, lr_decay_milestones)
+                           lr_decay_factor, lr_decay_step,
+                           lr_decay_milestones, lr_decay_milestones_post_layer)
 
     batch_multiplier = train_config["method_params"].get(
         "batch_multiplier", 1

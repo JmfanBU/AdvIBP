@@ -53,7 +53,7 @@ def Train_with_warmup(
             last_layer = Layer
 
             # Set up optimizer and lr decay scheduler
-            opt, lr_scheduler = opt_config.get_opt()
+            opt, lr_scheduler = opt_config.get_opt(idxLayer)
             # Set up moment grad generater
             moment_grad = two_objective_gradient([0.9] * 4)
             if idxLayer > 0:

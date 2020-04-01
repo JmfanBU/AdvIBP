@@ -64,7 +64,7 @@ class LinfPGDAttack(object):
                 # FGSM attack
                 self.a = 1.25 * eps
             else:
-                self.a = eps / 4
+                self.a = eps / 2
 
             for idxStep in range(self.k):
                 self.model.zero_grad()
