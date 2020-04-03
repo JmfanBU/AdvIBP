@@ -47,7 +47,8 @@ class optimizer_config(object):
     def get_opt(self, idxLayer):
         if self.opt_method == 'adam':
             opt = optim.Adam(
-                self.model.parameters(), lr=self.lr,
+                self.model.parameters(),
+                lr=self.lr if idxLayer == 0 else self.lr*self.lr_decay_factor,
                 weight_decay=self.weight_decay
             )
         elif self.opt_method == 'sgd':
