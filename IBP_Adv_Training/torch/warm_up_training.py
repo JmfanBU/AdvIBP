@@ -289,6 +289,7 @@ def epoch_train(
                     eps=post_warm_up_eps, layer_idx=layer_idx,
                     method_opt="interval_range", intermediate=True
                 )
+                data_ub, data_lb = layer_ub, layer_lb
                 layer_center, epsilon = intermediate_eps(
                     layer_ub, layer_lb
                 )
@@ -340,7 +341,8 @@ def epoch_train(
             if kwargs["bound_type"] == "interval":
                 ub, lb = model(
                     norm=norm, x_U=data_ub, x_L=data_lb, eps=eps, C=c,
-                    layer_idx=0, method_opt="interval_range"
+                    layer_idx=layer_idx if train else 0,
+                    method_opt="interval_range"
                 )
             else:
                 raise RuntimeError("Unknown bound_type " +

@@ -4,7 +4,7 @@
     "models_path": "./mnist_IBP_Large_03_04/",
     "training_params": {
         "method": "robust",
-        "epochs": 250,
+        "epochs": 300,
         "lr": 5e-4,
         "lr_decay_factor": 0.25,
         "lr_decay_step": 50,
