@@ -289,7 +289,6 @@ def epoch_train(
                     eps=post_warm_up_eps, layer_idx=layer_idx,
                     method_opt="interval_range", intermediate=True
                 )
-                data_ub, data_lb = layer_ub, layer_lb
                 layer_center, epsilon = intermediate_eps(
                     layer_ub, layer_lb
                 )
@@ -337,12 +336,17 @@ def epoch_train(
         model_range = output.max().detach().cpu().item() - \
             output.min().detach().cpu().item()
 
+        # regularization loss
+        reg_loss = 0
+        if "l1_reg" in kwargs and layer_idx != 0:
+            for param in model.parameters():
+                reg_loss += kwargs["l1_reg"] * torch.sum(torch.abs(param))
+
         if verbose or (method != "natural" and method != "warm_up"):
             if kwargs["bound_type"] == "interval":
                 ub, lb = model(
                     norm=norm, x_U=data_ub, x_L=data_lb, eps=eps, C=c,
-                    layer_idx=layer_idx if train else 0,
-                    method_opt="interval_range"
+                    layer_idx=0, method_opt="interval_range"
                 )
             else:
                 raise RuntimeError("Unknown bound_type " +
@@ -363,12 +367,12 @@ def epoch_train(
                     coeff1, coeff2, optimal = moment_grad.compute_coeffs(
                         regular_grads, robust_grads, c_eval=c_eval, c_t=c_t
                     )
-                loss = coeff1 * regular_ce + coeff2 * robust_ce
+                loss = coeff1 * regular_ce + coeff2 * robust_ce + reg_loss
                 model.zero_grad()
             else:
-                loss = coeff1 * regular_ce + coeff2 * robust_ce
+                loss = coeff1 * regular_ce + coeff2 * robust_ce + reg_loss
         elif method == "natural" or method == "warm_up":
-            loss = regular_ce
+            loss = regular_ce + reg_loss
         else:
             raise ValueError("Unknown method " + method)
 

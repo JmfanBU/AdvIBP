@@ -225,7 +225,7 @@ def model_train(config, train_config, model, model_id, model_config):
 
     if multi_gpu:
         logger.log("\nUsing multiple GPUs for computing IBP bounds\n")
-        model = BoundDataParallel(model, device_ids=[1, 2, 3])
+        model = BoundDataParallel(model, device_ids=[0, 1, 2, 3])
     model = model.cuda(device)
     if not inner_max_eval and not warm_up_param:
         Train(
