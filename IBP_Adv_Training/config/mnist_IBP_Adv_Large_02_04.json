@@ -1,7 +1,7 @@
 {
     "network_model": "network.py",
     "dataset": "mnist",
-    "models_path": "./mnist_IBP_Large_03_04/",
+    "models_path": "./mnist_IBP_Large_02_04/",
     "training_params": {
         "method": "robust",
         "epochs": 250,
@@ -32,7 +32,7 @@
         "loss_func": "ce"
     },
     "eval_params": {
-        "epsilon": 0.3,
+        "epsilon": 0.2,
         "attack_steps": 1,
         "attack_stepsize": 0.03,
         "random_start": true,
@@ -47,4 +47,3 @@
         }
     ]
 }
-

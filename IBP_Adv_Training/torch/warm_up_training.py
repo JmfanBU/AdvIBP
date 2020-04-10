@@ -336,12 +336,6 @@ def epoch_train(
         model_range = output.max().detach().cpu().item() - \
             output.min().detach().cpu().item()
 
-        # regularization loss
-        reg_loss = 0
-        if "l1_reg" in kwargs and layer_idx != 0:
-            for param in model.parameters():
-                reg_loss += kwargs["l1_reg"] * torch.sum(torch.abs(param))
-
         if verbose or (method != "natural" and method != "warm_up"):
             if kwargs["bound_type"] == "interval":
                 ub, lb = model(
@@ -367,12 +361,12 @@ def epoch_train(
                     coeff1, coeff2, optimal = moment_grad.compute_coeffs(
                         regular_grads, robust_grads, c_eval=c_eval, c_t=c_t
                     )
-                loss = coeff1 * regular_ce + coeff2 * robust_ce + reg_loss
+                loss = coeff1 * regular_ce + coeff2 * robust_ce
                 model.zero_grad()
             else:
-                loss = coeff1 * regular_ce + coeff2 * robust_ce + reg_loss
+                loss = coeff1 * regular_ce + coeff2 * robust_ce
         elif method == "natural" or method == "warm_up":
-            loss = regular_ce + reg_loss
+            loss = regular_ce
         else:
             raise ValueError("Unknown method " + method)
 
@@ -515,6 +509,8 @@ class two_objective_gradient(object):
         self.beta4 = betas[3]
 
         # initialize the moment variables
+        self.pre_grad1 = 0.
+        self.pre_grad2 = 0.
         self.grad1 = 0.
         self.grad2 = 0.
         self.grad1_norm = 0.
@@ -525,19 +521,37 @@ class two_objective_gradient(object):
         Update the moment variables given new sampled gradients
         """
         # Update biased moment estimate
-        self.grad1 = (
-            self.beta1 * self.grad1 + (1 - self.beta1) * grad1
-        ).detach().clone()
-        self.grad2 = (
-            self.beta2 * self.grad2 + (1 - self.beta2) * grad2
-        ).detach().clone()
-        self.grad1_norm = (
-            self.beta3 * self.grad1_norm + (1 - self.beta3) * grad1.norm()
-        ).detach().clone()
-        self.grad2_norm = (
-            self.beta4 * self.grad2_norm + (1 - self.beta4) * grad2.norm()
-        ).detach().clone()
-
+        if not torch.is_tensor(self.pre_grad1):
+            self.grad1 = (
+                self.beta1 * self.grad1 + (1 - self.beta1) * grad1
+            ).detach().clone()
+            self.grad2 = (
+                self.beta2 * self.grad2 + (1 - self.beta2) * grad2
+            ).detach().clone()
+            self.grad1_norm = (
+                self.beta3 * self.grad1_norm + (1 - self.beta3) * grad1.norm()
+            ).detach().clone()
+            self.grad2_norm = (
+                self.beta4 * self.grad2_norm + (1 - self.beta4) * grad2.norm()
+            ).detach().clone()
+        else:
+            self.grad1 = (
+                self.beta1 * self.grad1 + (1 - self.beta1) * self.pre_grad1
+            ).detach().clone()
+            self.grad2 = (
+                self.beta2 * self.grad2 + (1 - self.beta2) * self.pre_grad2
+            ).detach().clone()
+            self.grad1_norm = (
+                self.beta3 * self.grad1_norm +
+                (1 - self.beta3) * self.pre_grad1.norm()
+            ).detach().clone()
+            self.grad2_norm = (
+                self.beta4 * self.grad2_norm +
+                (1 - self.beta4) * self.pre_grad2.norm()
+            ).detach().clone()
+        # store previous gradient
+        self.pre_grad1 = grad1
+        self.pre_grad2 = grad2
         # Compute biased-corrected moment estimate
         grad1_hat = self.grad1 / (1 - np.power(self.beta1, self.steps))
         grad2_hat = self.grad2 / (1 - np.power(self.beta2, self.steps))
