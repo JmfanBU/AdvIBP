@@ -56,6 +56,7 @@ def Train_with_warmup(
             opt, lr_scheduler = opt_config.get_opt(idxLayer)
             # Set up moment grad generater
             moment_grad = two_objective_gradient([0.9] * 4)
+            renew_moment = True
             if idxLayer > 0:
                 epsilon_scheduler.init_value = epsilon_scheduler.final_value
 
@@ -80,6 +81,10 @@ def Train_with_warmup(
                 epoch_end_eps = epsilon_scheduler.get_eps(t + 1, 0)
                 post_warm_up_start_eps = post_warm_up_scheduler.get_eps(t, 0)
                 post_warm_up_end_eps = post_warm_up_scheduler.get_eps(t + 1, 0)
+                if post_warm_up_start_eps == max_eps \
+                        and idxLayer == 0 and renew_moment:
+                    moment_grad = two_objective_gradient([0.9] * 4)
+                    renew_moment = False
                 epoch_start_c_t = inner_max_scheduler.get_eps(t, 0)
                 logger.log(
                     "\n\n==========Training Stage at Layer {}"
