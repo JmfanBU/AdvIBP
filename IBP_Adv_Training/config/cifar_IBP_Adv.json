@@ -42,14 +42,14 @@
     },
     "models": [
         {
-            "model_id": "cnn_2layer_width_4",
-            "model_class": "model_cnn_2layer",
-            "model_params": {"in_ch": 3, "in_dim": 32, "width": 4, "linear_size": 100}
-        },
-        {
             "model_id": "cnn_4layer_width_8",
             "model_class": "model_cnn_4layer",
             "model_params": {"in_ch": 3, "in_dim": 32, "width": 8, "linear_size": 512}
+        },
+        {
+            "model_id": "cnn_2layer_width_4",
+            "model_class": "model_cnn_2layer",
+            "model_params": {"in_ch": 3, "in_dim": 32, "width": 4, "linear_size": 100}
         }
     ]
 }
