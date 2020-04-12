@@ -44,6 +44,7 @@ def Train_with_warmup(
     timer = 0.0
     last_layer = None
     epoch_start_c_t = None
+    evaluation_eps = evaluation_params["epsilon"]
 
     for idxLayer, Layer in enumerate(model if not multi_gpu else model.module):
         if isinstance(Layer, BoundLinear) or isinstance(Layer, BoundConv2d):
@@ -58,8 +59,10 @@ def Train_with_warmup(
             moment_grad = two_objective_gradient([0.9] * 4)
             renew_moment = True
             if idxLayer > 0:
+                epsilon_scheduler.final_value = evaluation_eps
                 epsilon_scheduler.init_value = epsilon_scheduler.final_value
 
+                post_warm_up_scheduler.final_value = evaluation_eps
                 post_warm_up_scheduler.init_value = (
                     post_warm_up_scheduler.final_value
                 )
@@ -130,7 +133,6 @@ def Train_with_warmup(
                 logger.log("\n==========Evaluating==========")
                 with torch.no_grad():
                     # evaluate
-                    evaluation_eps = evaluation_params["epsilon"]
                     err, clean_err = epoch_train(
                         model, t, test_data,
                         Scheduler("linear", 0, 0,
