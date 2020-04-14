@@ -59,10 +59,8 @@ def Train_with_warmup(
             moment_grad = two_objective_gradient([0.9] * 4)
             renew_moment = True
             if idxLayer > 0:
-                epsilon_scheduler.final_value = evaluation_eps
                 epsilon_scheduler.init_value = epsilon_scheduler.final_value
 
-                post_warm_up_scheduler.final_value = evaluation_eps
                 post_warm_up_scheduler.init_value = (
                     post_warm_up_scheduler.final_value
                 )
