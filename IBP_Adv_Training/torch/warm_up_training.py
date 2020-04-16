@@ -190,6 +190,7 @@ def epoch_train(
     coeff1, coeff2 = 1, 0
     optimal = False
     c_eval = None
+    grad1_norm = 0
 
     if train:
         model.train()
@@ -363,9 +364,12 @@ def epoch_train(
                         regular_grads, robust_grads, c_eval=c_eval, c_t=c_t
                     )
                 else:
-                    coeff1, coeff2, optimal = moment_grad.compute_coeffs(
+                    coeff1, coeff2, optimal, grad1_norm = moment_grad.compute_coeffs(
                         regular_grads, robust_grads, c_eval=c_eval, c_t=c_t
                     )
+                    if grad1_norm < 1e-5:
+                        coeff1 = 0
+                        coeff2 = 1
                 loss = coeff1 * regular_ce + coeff2 * robust_ce
                 model.zero_grad()
             else:
@@ -396,9 +400,10 @@ def epoch_train(
             if c_eval is not None:
                 pbar.set_description(
                     'Epoch: {}, eps: {:.3g}, c_eval: {:.3g}, '
+                    'grad1_norm: {:.4g}, '
                     'coeff1: {:.2g}, coeff2: {:.2g}, '
                     'optimal: {}, R: {model_range:.2f}'.format(
-                        t, eps, c_eval,
+                        t, eps, c_eval, grad1_norm,
                         coeff1, coeff2, optimal, model_range=model_range,
                     )
                 )
@@ -614,7 +619,7 @@ class two_objective_gradient(object):
                     coeff2 = 1.
                 else:
                     coeff2 = -dot / grad2_norm.pow(2)
-        return coeff1, coeff2, optimal
+        return coeff1, coeff2, optimal, grad1_norm
 
 
 def normalize(coeff1, coeff2):
