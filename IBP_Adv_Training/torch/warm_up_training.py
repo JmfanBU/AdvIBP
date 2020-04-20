@@ -118,7 +118,7 @@ def Train_with_warmup(
                         t - (post_warm_up_scheduler.final_step //
                              post_warm_up_scheduler.num_steps_per_epoch - 1)
                         + 1, 0
-                    ), 201 if idxLayer == 0 else 151)
+                    ), 251 if idxLayer == 0 else 151)
                     )
                 elif lr_decay_milestones:
                     # Use MultiStepLR with milestones.
@@ -367,9 +367,9 @@ def epoch_train(
                     coeff1, coeff2, optimal, grad1_norm = moment_grad.compute_coeffs(
                         regular_grads, robust_grads, c_eval=c_eval, c_t=c_t
                     )
-                    if grad1_norm < 1e-5:
-                        coeff1 = 0
-                        coeff2 = 1
+                    if t > 200:
+                        coeff1 = 0.
+                        coeff2 = 1.
                 loss = coeff1 * regular_ce + coeff2 * robust_ce
                 model.zero_grad()
             else:
