@@ -240,6 +240,12 @@ class BoundSequential(Sequential):
                 norm, h_U, h_L = module.interval_propagate(
                     norm, h_U, h_L, eps
                 )
+                if (h_U < h_L).any():
+                    raise ValueError(
+                        'layer: {}, property: {}\n diff: {}'.format(
+                            i, module, (h_U - h_L)[(h_U - h_L) < 0]
+                        )
+                    )
         else:
             for i, module in enumerate(
                 list(self._modules.values())[:layer_idx]
