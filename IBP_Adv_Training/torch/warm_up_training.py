@@ -190,7 +190,7 @@ def epoch_train(
     coeff1, coeff2 = 1, 0
     optimal = False
     c_eval = None
-    grad1_norm = 0
+    g1_norm = 0
 
     if train:
         model.train()
@@ -364,8 +364,13 @@ def epoch_train(
                         regular_grads, robust_grads, c_eval=c_eval, c_t=c_t
                     )
                 else:
-                    coeff1, coeff2, optimal, grad1_norm = moment_grad.compute_coeffs(
-                        regular_grads, robust_grads, c_eval=c_eval, c_t=c_t
+                    if post_warm_up_eps == max_eps:
+                        post_warm_up = True
+                    else:
+                        post_warm_up = False
+                    coeff1, coeff2, optimal, g1_norm = moment_grad.compute_coeffs(
+                        regular_grads, robust_grads,
+                        c_eval=c_eval, c_t=c_t, post_warm_up=post_warm_up
                     )
                     if t > 200:
                         coeff1 = 0.
@@ -403,7 +408,7 @@ def epoch_train(
                     'grad1_norm: {:.4g}, '
                     'coeff1: {:.2g}, coeff2: {:.2g}, '
                     'optimal: {}, R: {model_range:.2f}'.format(
-                        t, eps, c_eval, grad1_norm,
+                        t, eps, c_eval, g1_norm,
                         coeff1, coeff2, optimal, model_range=model_range,
                     )
                 )
@@ -526,12 +531,12 @@ class two_objective_gradient(object):
         self.grad1_norm = 0.
         self.grad2_norm = 0.
 
-    def moment_estimate(self, grad1, grad2):
+    def moment_estimate(self, grad1, grad2, post_warm_up):
         """
         Update the moment variables given new sampled gradients
         """
         # Update biased moment estimate
-        if not torch.is_tensor(self.pre_grad1):
+        if not torch.is_tensor(self.pre_grad1) or not post_warm_up:
             self.grad1 = (
                 self.beta1 * self.grad1 + (1 - self.beta1) * grad1
             ).detach().clone()
@@ -572,11 +577,15 @@ class two_objective_gradient(object):
 
         return grad1_hat, grad2_hat, grad1_norm_hat, grad2_norm_hat
 
-    def compute_coeffs(self, g1, g2, c_eval=None, c_t=None):
+    def compute_coeffs(
+        self, g1, g2, post_warm_up=False, c_eval=None, c_t=None
+    ):
         # count step
         self.steps += 1
         # Obtain moment estimate
-        grad1, grad2, grad1_norm, grad2_norm = self.moment_estimate(g1, g2)
+        grad1, grad2, grad1_norm, grad2_norm = self.moment_estimate(
+            g1, g2, post_warm_up
+        )
         # Compute dot product and normalized gradient
         dot = torch.dot(grad1, grad2)
         grad1_normalized = grad1 / grad1_norm
