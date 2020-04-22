@@ -84,7 +84,7 @@ def Train_with_warmup(
                 post_warm_up_end_eps = post_warm_up_scheduler.get_eps(t + 1, 0)
                 if post_warm_up_start_eps == max_eps \
                         and idxLayer == 0 and renew_moment:
-                    moment_grad = two_objective_gradient([0.9] * 4)
+                    moment_grad = two_objective_gradient([0.99] * 4)
                     renew_moment = False
                 epoch_start_c_t = inner_max_scheduler.get_eps(t, 0)
                 logger.log(
