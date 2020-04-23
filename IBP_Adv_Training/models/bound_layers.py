@@ -242,7 +242,7 @@ class BoundSequential(Sequential):
                     norm, h_U, h_L, eps
                 )
                 if (h_U < h_L).any():
-                    if (h_U - h_L > -1e-4).all():
+                    if (h_U - h_L > -1e-3).all():
                         warnings.warn(
                             'fix numerical issue for IBP computation!'
                         )
@@ -265,7 +265,9 @@ class BoundSequential(Sequential):
                 )
                 if (h_U < h_L).any():
                     if (h_U - h_L > -1e-5).all():
-                        logger.log('fix numerical issue for IBP computation!')
+                        warnings.warn(
+                            'fix numerical issue for IBP computation!'
+                        )
                         h_L[(h_U - h_L) < 0] = (
                             h_U[(h_U - h_L) < 0] + h_L[(h_U - h_L) < 0]
                         ) / 2.
