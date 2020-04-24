@@ -264,7 +264,7 @@ class BoundSequential(Sequential):
                     norm, h_U, h_L, eps
                 )
                 if (h_U < h_L).any():
-                    if (h_U - h_L > -1e-5).all():
+                    if (h_U - h_L > -1e-3).all():
                         warnings.warn(
                             'fix numerical issue for IBP computation!'
                         )
