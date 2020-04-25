@@ -87,6 +87,9 @@ def Train_with_warmup(
                     moment_grad = two_objective_gradient([0.99] * 4)
                     renew_moment = False
                 epoch_start_c_t = inner_max_scheduler.get_eps(t, 0)
+                epoch_end_c_t = inner_max_scheduler.get_eps(t + 1, 0)
+                if epoch_start_c_t == epoch_end_c_t and not renew_moment:
+                    epoch_start_c_t *= 1
                 logger.log(
                     "\n\n==========Training Stage at Layer {}"
                     "==========".format(idxLayer)
@@ -372,7 +375,7 @@ def epoch_train(
                         regular_grads, robust_grads,
                         c_eval=c_eval, c_t=c_t, post_warm_up=post_warm_up
                     )
-                    if t > 200:
+                    if t > 250:
                         coeff1 = 0.
                         coeff2 = 1.
                 loss = coeff1 * regular_ce + coeff2 * robust_ce
@@ -600,7 +603,7 @@ class two_objective_gradient(object):
             coeff1 = coeff / grad1_norm
             coeff2 = coeff / grad2_norm
             optimal = "same dir"
-        else:
+        elif not post_warm_up:
             optimal = "opposite dir"
             if c_t is not None and c_eval is not None:
                 if c_eval <= c_t:
@@ -628,6 +631,12 @@ class two_objective_gradient(object):
                     coeff2 = 1.
                 else:
                     coeff2 = -dot / grad2_norm.pow(2)
+        else:
+            coeff1 = (grad2_norm.pow(2) - dot) / \
+                (grad1_norm.pow(2) + grad2_norm.pow(2) - 2 * dot)
+            coeff2 = 1 - coeff1
+            optimal = True
+
         return coeff1, coeff2, optimal, grad1_norm
 
 
