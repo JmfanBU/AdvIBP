@@ -603,7 +603,7 @@ class two_objective_gradient(object):
             coeff1 = coeff / grad1_norm
             coeff2 = coeff / grad2_norm
             optimal = "same dir"
-        elif not post_warm_up:
+        else:
             optimal = "opposite dir"
             if c_t is not None and c_eval is not None:
                 if c_eval <= c_t:
@@ -631,12 +631,6 @@ class two_objective_gradient(object):
                     coeff2 = 1.
                 else:
                     coeff2 = -dot / grad2_norm.pow(2)
-        else:
-            coeff1 = (grad2_norm.pow(2) - dot) / \
-                (grad1_norm.pow(2) + grad2_norm.pow(2) - 2 * dot)
-            coeff2 = 1 - coeff1
-            optimal = True
-
         return coeff1, coeff2, optimal, grad1_norm
 
 
