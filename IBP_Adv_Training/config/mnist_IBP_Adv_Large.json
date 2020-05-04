@@ -1,14 +1,15 @@
 {
     "network_model": "network.py",
     "dataset": "mnist",
-    "models_path": "./mnist_IBP_Large_03_04_new/",
+    "models_path": "./mnist_IBP_Large_03_04_test_250/",
     "training_params": {
         "method": "robust",
-        "epochs": 350,
+        "epochs": 250,
         "lr": 5e-4,
         "lr_decay_factor": 0.25,
-        "lr_decay_step": 50,
-        "lr_decay_milestones": null,
+        "lr_decay_step": null,
+        "lr_decay_milestones": [150, 200],
+        "lr_decay_milestones_post_layer": [50, 100, 200],
         "weight_decay": 0.0,
         "optimizer": "adam",
         "starting_epsilon": 0.0,
@@ -19,14 +20,14 @@
         "norm": "inf",
         "verbose": false,
         "multi_gpu": true,
-        "warm_up": {"schedule_start": 0, "schedule_length": 100, "schedule_type": "smoothed"},
+        "warm_up": {"schedule_start": 0, "schedule_length": 50, "schedule_type": "smoothed"},
         "inner_max_eval": {"schedule_start": 10, "schedule_length": 50, "schedule_type": "linear", "c_max": 1e-4, "c_min": 1e-6},
         "loader_params": {"batch_size": 256, "test_batch_size": 256, "shuffle_train": true},
         "method_params": {"bounded_input": true, "bound_type": "interval", "batch_multiplier": 1, "adversarial_training": true}
     },
     "attack_params": {
         "epsilon": 0.4,
-        "attack_steps": 10,
+        "attack_steps": 1,
         "attack_stepsize": 0.03,
         "random_start": true,
         "loss_func": "ce"
