@@ -4,11 +4,11 @@
     "models_path": "./cifar_small_2_255/",
     "training_params": {
         "method": "robust",
-        "epochs": 3500,
+        "epochs": 3200,
         "lr": 0.0005,
         "lr_decay_factor": 0.1,
         "lr_decay_step": null,
-        "lr_decay_milestones": [2600, 3000],
+        "lr_decay_milestones": [2200, 2700],
         "lr_decay_milestones_post_layer": [1000, 2000, 3000],
         "weight_decay": 0.0,
         "optimizer": "adam",
@@ -20,7 +20,7 @@
         "norm": "inf",
         "verbose": false,
         "multi_gpu": false,
-        "warm_up": {"schedule_start": 100, "schedule_length": 1000, "schedule_type": "smoothed"},
+        "warm_up": {"schedule_start": 10, "schedule_length": 1000, "schedule_type": "smoothed"},
         "inner_max_eval": {"schedule_start": 20, "schedule_length": 280, "schedule_type": "linear", "c_max": 1e-3, "c_min": 1e-6},
         "loader_params": {"batch_size": 256, "test_batch_size": 256, "shuffle_train": true, "train_random_transform": true, "normalize_input": true},
         "method_params": {"bounded_input": true, "bound_type": "interval", "batch_multiplier": 1, "adversarial_training": true}
