@@ -59,7 +59,7 @@ def Train_with_warmup(
             if idxLayer == 0:
                 moment_grad = two_objective_gradient([0.0] * 4)
             else:
-                moment_grad = two_objective_gradient([0.99] * 4)
+                moment_grad = two_objective_gradient([0.9] * 4)
             renew_moment = True
             if idxLayer > 0:
                 epsilon_scheduler.init_value = epsilon_scheduler.final_value
@@ -87,7 +87,7 @@ def Train_with_warmup(
                 post_warm_up_end_eps = post_warm_up_scheduler.get_eps(t + 1, 0)
                 if post_warm_up_start_eps == max_eps \
                         and idxLayer == 0 and renew_moment:
-                    moment_grad = two_objective_gradient([0.99] * 4)
+                    moment_grad = two_objective_gradient([0.9] * 4)
                     renew_moment = False
                 epoch_start_c_t = inner_max_scheduler.get_eps(t, 0)
                 epoch_end_c_t = inner_max_scheduler.get_eps(t + 1, 0)
@@ -378,9 +378,9 @@ def epoch_train(
                         regular_grads, robust_grads,
                         c_eval=c_eval, c_t=c_t, post_warm_up=post_warm_up
                     )
-                    if t > 250:
-                        coeff1 = 0.
-                        coeff2 = 1.
+                    # if t > 250:
+                    #     coeff1 = 0.
+                    #     coeff2 = 1.
                 loss = coeff1 * regular_ce + coeff2 * robust_ce
                 model.zero_grad()
             else:
@@ -603,8 +603,12 @@ class two_objective_gradient(object):
             bisector_norm = bisector.norm()
             coeff = 0.5 / bisector_norm.pow(2) * \
                 (grad1_norm + grad2_norm + dot / grad1_norm + dot / grad2_norm)
-            coeff1 = coeff / grad1_norm
-            coeff2 = coeff / grad2_norm
+            if not post_warm_up:
+                coeff1 = coeff / grad1_norm
+                coeff2 = coeff / grad2_norm
+            else:
+                coeff1 = coeff
+                coeff2 = coeff * grad1_norm / grad2_norm
             optimal = "same dir"
         else:
             optimal = "opposite dir"
