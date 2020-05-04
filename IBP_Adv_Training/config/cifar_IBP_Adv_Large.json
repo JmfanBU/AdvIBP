@@ -43,7 +43,7 @@
     "models": [
         {
             "model_id": "IBP_Large",
-            "model_class": "IBP_Large",
+            "model_class": "IBP_large",
             "model_params": {"in_ch": 3, "in_dim": 32, "linear_size": 512}
         }
     ]
