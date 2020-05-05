@@ -381,15 +381,14 @@ def epoch_train(
                     # if t > 250:
                     #     coeff1 = 0.
                     #     coeff2 = 1.
-                if not post_warm_up:
-                    loss = coeff1 * regular_ce + coeff2 * robust_ce
-                else:
+                if post_warm_up and optimal == 'opposite dir':
                     loss = coeff1 * regular_ce + coeff2 * robust_ce \
                         + 0.5 * robust_ce.pow(2)
+                else:
+                    loss = coeff1 * regular_ce + coeff2 * robust_ce
                 model.zero_grad()
             else:
-                loss = coeff1 * regular_ce + coeff2 * robust_ce \
-                    + 0.5 * robust_ce.pow(2)
+                loss = coeff1 * regular_ce + coeff2 * robust_ce
         elif method == "natural" or method == "warm_up":
             loss = regular_ce
         else:
