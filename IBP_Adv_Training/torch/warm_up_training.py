@@ -611,8 +611,8 @@ class two_objective_gradient(object):
                 coeff1 = coeff / grad1_norm
                 coeff2 = coeff / grad2_norm
             else:
-                coeff1 = coeff * grad2_norm / grad1_norm
-                coeff2 = coeff
+                coeff1 = coeff
+                coeff2 = coeff * grad1_norm / grad2_norm
             optimal = "same dir"
         else:
             optimal = "opposite dir"
