@@ -621,12 +621,20 @@ class two_objective_gradient(object):
                     else:
                         coeff2 = -dot / grad2_norm.pow(2)
                 else:
-                    coeff2 = 1.
-                    if grad1_norm == 0:
-                        coeff1 = 0.
-                        optimal = "first obj grad vanishes"
+                    if not post_warm_up:
+                        coeff2 = 1.
+                        if grad1_norm == 0:
+                            coeff1 = 0.
+                            optimal = "first obj grad vanishes"
+                        else:
+                            coeff1 = -dot / grad1_norm.pow(2)
                     else:
-                        coeff1 = -dot / grad1_norm.pow(2)
+                        coeff2 = 2.
+                        if grad1_norm == 0:
+                            coeff1 = 0.
+                            optimal = "first obj grad vanishes"
+                        else:
+                            coeff1 = -dot / grad1_norm.pow(2)
             else:
                 coeff1 = 1.
                 if grad2_norm == 0.:
