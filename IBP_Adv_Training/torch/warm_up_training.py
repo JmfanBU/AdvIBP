@@ -381,10 +381,15 @@ def epoch_train(
                     # if t > 250:
                     #     coeff1 = 0.
                     #     coeff2 = 1.
-                loss = coeff1 * regular_ce + coeff2 * robust_ce
+                if not post_warm_up:
+                    loss = coeff1 * regular_ce + coeff2 * robust_ce
+                else:
+                    loss = coeff1 * regular_ce + coeff2 * robust_ce \
+                        + 0.5 * robust_ce.pow(2)
                 model.zero_grad()
             else:
-                loss = coeff1 * regular_ce + coeff2 * robust_ce
+                loss = coeff1 * regular_ce + coeff2 * robust_ce \
+                    + 0.5 * robust_ce.pow(2)
         elif method == "natural" or method == "warm_up":
             loss = regular_ce
         else:
@@ -621,20 +626,12 @@ class two_objective_gradient(object):
                     else:
                         coeff2 = -dot / grad2_norm.pow(2)
                 else:
-                    if not post_warm_up:
-                        coeff2 = 1.
-                        if grad1_norm == 0:
-                            coeff1 = 0.
-                            optimal = "first obj grad vanishes"
-                        else:
-                            coeff1 = -dot / grad1_norm.pow(2)
+                    coeff2 = 1.
+                    if grad1_norm == 0:
+                        coeff1 = 0.
+                        optimal = "first obj grad vanishes"
                     else:
-                        coeff2 = 2.
-                        if grad1_norm == 0:
-                            coeff1 = 0.
-                            optimal = "first obj grad vanishes"
-                        else:
-                            coeff1 = -dot / grad1_norm.pow(2)
+                        coeff1 = -dot / grad1_norm.pow(2)
             else:
                 coeff1 = 1.
                 if grad2_norm == 0.:
