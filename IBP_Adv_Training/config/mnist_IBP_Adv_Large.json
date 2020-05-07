@@ -1,7 +1,7 @@
 {
     "network_model": "network.py",
     "dataset": "mnist",
-    "models_path": "./mnist_IBP_Large_03_04_test_250/",
+    "models_path": "./mnist_IBP_Large_03_04_new/",
     "training_params": {
         "method": "robust",
         "epochs": 250,
