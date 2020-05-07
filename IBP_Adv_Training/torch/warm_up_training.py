@@ -59,7 +59,7 @@ def Train_with_warmup(
             if idxLayer == 0:
                 moment_grad = two_objective_gradient([0.0] * 4)
             else:
-                moment_grad = two_objective_gradient([0.9] * 4)
+                moment_grad = two_objective_gradient([0.9, 0.999] * 2)
             renew_moment = True
             if idxLayer > 0:
                 epsilon_scheduler.init_value = epsilon_scheduler.final_value
@@ -87,7 +87,7 @@ def Train_with_warmup(
                 post_warm_up_end_eps = post_warm_up_scheduler.get_eps(t + 1, 0)
                 if post_warm_up_start_eps == max_eps \
                         and idxLayer == 0 and renew_moment:
-                    moment_grad = two_objective_gradient([0.9] * 4)
+                    moment_grad = two_objective_gradient([0.9, 0.999] * 2)
                     renew_moment = False
                 epoch_start_c_t = inner_max_scheduler.get_eps(t, 0)
                 epoch_end_c_t = inner_max_scheduler.get_eps(t + 1, 0)
@@ -529,8 +529,8 @@ class two_objective_gradient(object):
 
         # decay parameters
         self.beta1 = betas[0]
-        self.beta2 = betas[1]
-        self.beta3 = betas[2]
+        self.beta2 = betas[2]
+        self.beta3 = betas[1]
         self.beta4 = betas[3]
 
         # initialize the moment variables
