@@ -87,7 +87,7 @@ def Train_with_warmup(
                 post_warm_up_end_eps = post_warm_up_scheduler.get_eps(t + 1, 0)
                 if post_warm_up_start_eps == max_eps \
                         and idxLayer == 0 and renew_moment:
-                    moment_grad = two_objective_gradient([0.9, 0.99] * 2)
+                    moment_grad = two_objective_gradient([0.9, 0.9] * 2)
                     renew_moment = False
                 epoch_start_c_t = inner_max_scheduler.get_eps(t, 0)
                 epoch_end_c_t = inner_max_scheduler.get_eps(t + 1, 0)
@@ -381,7 +381,8 @@ def epoch_train(
                     # if t > 250:
                     #     coeff1 = 0.
                     #     coeff2 = 1.
-                if post_warm_up and optimal == 'opposite dir':
+                if post_warm_up and optimal == 'opposite dir' \
+                        and layer_idx != 0:
                     loss = coeff1 * regular_ce + coeff2 * robust_ce \
                         + 0.5 * robust_ce.pow(2)
                 else:
