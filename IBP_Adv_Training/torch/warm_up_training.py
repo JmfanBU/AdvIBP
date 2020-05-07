@@ -381,8 +381,7 @@ def epoch_train(
                     # if t > 250:
                     #     coeff1 = 0.
                     #     coeff2 = 1.
-                if post_warm_up and optimal == 'opposite dir' \
-                        and layer_idx != 0:
+                if post_warm_up and optimal == 'opposite dir':
                     loss = coeff1 * regular_ce + coeff2 * robust_ce \
                         + 0.5 * robust_ce.pow(2)
                 else:
