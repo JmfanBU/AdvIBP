@@ -45,6 +45,8 @@ def Train_with_warmup(
     last_layer = None
     epoch_start_c_t = None
     evaluation_eps = evaluation_params["epsilon"]
+    for param in model.parameters():
+        param.requires_grad = True
 
     for idxLayer, Layer in enumerate(model if not multi_gpu else model.module):
         if isinstance(Layer, BoundLinear) or isinstance(Layer, BoundConv2d):

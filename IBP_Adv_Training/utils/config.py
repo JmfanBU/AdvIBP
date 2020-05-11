@@ -178,7 +178,7 @@ def config_modelloader(config, load_pretrain=False, cuda=False):
         if cuda:
             m.cuda(device)
         if load_pretrain:
-            model_file = get_path(config, model_id, "model")
+            model_file = get_path(config, model_id, "best_model")
             print("Loading model file", model_file)
             checkpoint = torch.load(model_file)
             if isinstance(checkpoint["state_dict"], list):

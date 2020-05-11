@@ -96,6 +96,7 @@ def model_train(config, train_config, model, model_id, model_config):
     )
 
     # read traininig parameters from config file
+    load_pretrain = config.get("load_pretrain", False)
     epochs = train_config["epochs"]
     lr = train_config["lr"]
     weight_decay = train_config["weight_decay"]
@@ -153,7 +154,7 @@ def model_train(config, train_config, model, model_id, model_config):
             train_config.get("schedule_type", "linear"),
             schedule_start * num_steps_per_epoch,
             ((schedule_start + schedule_length) - 1) * num_steps_per_epoch,
-            starting_epsilon,
+            starting_epsilon if not load_pretrain else end_epsilon,
             end_epsilon,
             num_steps_per_epoch
         )
@@ -162,7 +163,7 @@ def model_train(config, train_config, model, model_id, model_config):
             train_config.get("schedule_type", "linear"),
             schedule_start * num_steps_per_epoch,
             ((schedule_start + schedule_length) - 1) * num_steps_per_epoch,
-            starting_epsilon,
+            starting_epsilon if not load_pretrain else end_epsilon,
             end_epsilon,
             num_steps_per_epoch
         )
@@ -176,7 +177,7 @@ def model_train(config, train_config, model, model_id, model_config):
             ) - 1 + inner_max_eval.get(
                 "schedule_length", schedule_length
             )) - 1) * num_steps_per_epoch,
-            inner_max_eval.get("c_max", 1),
+            inner_max_eval.get("c_max", 1) if not load_pretrain else inner_max_eval.get("c_min", 1e-5),
             inner_max_eval.get("c_min", 1e-5),
             num_steps_per_epoch
         )
@@ -192,7 +193,7 @@ def model_train(config, train_config, model, model_id, model_config):
             warm_up_param.get("schedule_type", "linear"),
             warm_up_start * num_steps_per_epoch,
             warm_up_end * num_steps_per_epoch,
-            starting_epsilon,
+            starting_epsilon if not load_pretrain else end_epsilon,
             end_epsilon,
             num_steps_per_epoch
         )
@@ -206,7 +207,7 @@ def model_train(config, train_config, model, model_id, model_config):
                   inner_max_eval.get(
                       "schedule_length",
                       schedule_length)) - 1) * num_steps_per_epoch,
-                inner_max_eval.get("c_max", 1),
+                inner_max_eval.get("c_max", 1) if not load_pretrain else inner_max_eval.get("c_min", 1e-5),
                 inner_max_eval.get("c_min", 1e-5),
                 num_steps_per_epoch
             )
@@ -265,7 +266,9 @@ def model_train(config, train_config, model, model_id, model_config):
 def main(args):
     config = load_config(args)
     global_train_config = config["training_params"]
-    models, model_names = config_modelloader(config)
+    models, model_names = config_modelloader(
+        config, load_pretrain=config.get('load_pretrain', False)
+    )
     for model, model_id, model_config in zip(models, model_names,
                                              config["models"]):
         # make a copy of global training config, and update per-model config
