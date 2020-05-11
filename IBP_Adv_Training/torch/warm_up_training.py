@@ -45,6 +45,8 @@ def Train_with_warmup(
     last_layer = None
     epoch_start_c_t = None
     evaluation_eps = evaluation_params["epsilon"]
+    for param in model.parameters():
+        param.requires_grad = True
 
     for idxLayer, Layer in enumerate(model if not multi_gpu else model.module):
         if isinstance(Layer, BoundLinear) or isinstance(Layer, BoundConv2d):
@@ -87,7 +89,7 @@ def Train_with_warmup(
                 post_warm_up_end_eps = post_warm_up_scheduler.get_eps(t + 1, 0)
                 if post_warm_up_start_eps == max_eps \
                         and idxLayer == 0 and renew_moment:
-                    moment_grad = two_objective_gradient([0.9, 0.9] * 2)
+                    moment_grad = two_objective_gradient([0.9, 0.99] * 2)
                     renew_moment = False
                 epoch_start_c_t = inner_max_scheduler.get_eps(t, 0)
                 epoch_end_c_t = inner_max_scheduler.get_eps(t + 1, 0)
