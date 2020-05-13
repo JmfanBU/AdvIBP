@@ -62,3 +62,4 @@ IBP_Adv_Training/data/
 # networks
 IBP_Adv_Training/cifar*/
 IBP_Adv_Training/mnist*/
+IBP_Adv_Training/models_crown*/
