@@ -1,21 +1,22 @@
 {
     "network_model": "network.py",
     "dataset": "cifar",
-    "models_path": "./cifar_small_16_255_09_099/",
+    "load_pretrain": true,
+    "models_path": "./cifar_small_2_255_second_stage/",
     "training_params": {
         "method": "robust",
         "epochs": 3200,
-        "lr": 0.0005,
+        "lr": 0.00005,
         "lr_decay_factor": 0.1,
         "lr_decay_step": null,
-        "lr_decay_milestones": [2200, 2700],
+        "lr_decay_milestones": [0, 1000, 2000, 3000],
         "lr_decay_milestones_post_layer": [1000, 2000, 3000],
         "weight_decay": 0.0,
         "optimizer": "adam",
         "starting_epsilon": 0.0,
-        "epsilon": 0.06902,
-        "schedule_start": 400,
-        "schedule_length": 400,
+        "epsilon": 0.00862745098,
+        "schedule_start": 1,
+        "schedule_length": 1,
         "schedule_type": "smoothed",
         "norm": "inf",
         "verbose": false,
@@ -26,14 +27,14 @@
         "method_params": {"bounded_input": true, "bound_type": "interval", "batch_multiplier": 1, "adversarial_training": true}
     },
     "attack_params": {
-        "epsilon": 0.06902,
+        "epsilon": 0.00862745098,
         "attack_steps": 1,
         "attack_stepsize": 0.03,
         "random_start": true,
         "loss_func": "ce"
     },
     "eval_params": {
-        "epsilon": 0.0627451,
+        "epsilon": 0.007843,
         "attack_steps": 1,
         "attack_stepsize": 0.03,
         "random_start": true,
@@ -45,6 +46,11 @@
             "model_id": "cnn_2layer_width_4",
             "model_class": "model_cnn_2layer",
             "model_params": {"in_ch": 3, "in_dim": 32, "width": 4, "linear_size": 100}
+        },
+        {
+            "model_id": "cnn_4layer_width_8",
+            "model_class": "model_cnn_4layer",
+            "model_params": {"in_ch": 3, "in_dim": 32, "width": 8, "linear_size": 512}
         }
     ]
 }
