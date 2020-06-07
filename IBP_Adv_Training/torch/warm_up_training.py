@@ -45,10 +45,13 @@ def Train_with_warmup(
     last_layer = None
     epoch_start_c_t = None
     evaluation_eps = evaluation_params["epsilon"]
+    finish_eval = False
     for param in model.parameters():
         param.requires_grad = True
 
     for idxLayer, Layer in enumerate(model if not multi_gpu else model.module):
+        if finish_eval:
+            break
         if isinstance(Layer, BoundLinear) or isinstance(Layer, BoundConv2d):
             if last_layer is not None:
                 for param in last_layer.parameters():
@@ -95,6 +98,29 @@ def Train_with_warmup(
                 epoch_end_c_t = inner_max_scheduler.get_eps(t + 1, 0)
                 if epoch_start_c_t == epoch_end_c_t and not renew_moment:
                     epoch_start_c_t *= 1
+                if method_params.get('eval', False):
+                    logger.log("\n==========Evaluating==========")
+                    with torch.no_grad():
+                        # evaluate
+                        err, clean_err = epoch_train(
+                            model, t, test_data,
+                            Scheduler("linear", 0, 0,
+                                      evaluation_eps, evaluation_eps, 1),
+                            max_eps, norm, logger, verbose,
+                            False, None, method,
+                            post_warm_up_scheduler=Scheduler(
+                                "linear", 0, 0,
+                                evaluation_eps, evaluation_eps, 1
+                            ), **method_params, **evaluation_params
+                        )
+                        logger.log(
+                            'best error {}, clean error {}'.format(
+                                err, clean_err
+                            )
+                        )
+                        finish_eval = True
+                        break
+                    break
                 logger.log(
                     "\n\n==========Training Stage at Layer {}"
                     "==========".format(idxLayer)
