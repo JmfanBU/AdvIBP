@@ -1,6 +1,6 @@
 # Adversarial Training and Provable Robustness: A Tale of Two Objectives
 
-*AdvIBP* is the official implementation of Adversarial Training and Provable Robustness: A Tale of Two Objectives. *AdvIBP* is a certifed adversarial training method that combines adversarial training and provable robustness verification. *AdvIBP* matches or outperforms state-of-art approach, [CROWN-IBP](https://openreview.net/pdf?id=Skxuk1rFwB), for provable L\_infinity robustness on MNIST and CIFAR. The detailed comparison is shown in Table 1.
+*AdvIBP* is the official implementation of Adversarial Training and Provable Robustness: A Tale of Two Objectives. *AdvIBP* is a certifed adversarial training method that combines adversarial training and provable robustness verification. *AdvIBP* matches or outperforms state-of-art approach, [CROWN-IBP](https://openreview.net/pdf?id=Skxuk1rFwB), for provable L\_infinity robustness on MNIST and CIFAR.
 
 Our repository provides high quality PyTorch implementations of *AdvIBP*. We implemented Multi-GPU training for training large models.
 
@@ -130,15 +130,14 @@ python train.py --config eval/cifar_IBP_Adv_Small_16_255_eval.json
 
 ## Results
 
-Our model achieves the following standard, verified and PGD errors compared with CROWN-IBP:
-<p align="center">
-    <img src="figures/result_table.png" alt>
-</p>
-<p align="center">
-    <em>Table 1: Comparison with CROWN-IBP</em>
-</p>
+### *AdvIBP* models:
 
-
-## Contributing
-
-> 📋Pick a licence and describe how to contribute to your code repository. 
+| Dataset  | Test epsilon | Model path in trained_IBP_models          | Standard error | Verified error | PGD error |
+|----------|--------------|-------------------------------------------|----------------|----------------|-----------|
+| MNIST    | 0.1          | mnist/mnist_small_01_02<br>mnist/mnist_med_01_02<br>mnist/mnist_large_01_02| 1.63%<br>1.41%<br>1.03%        | 3.69%<br>3.24%<br>2.28%           | 2.70%<br>2.26%<br>1.53%                       |
+| MNIST    | 0.2          | mnist/mnist_small_02_04<br>mnist/mnist_med_02_04<br>mnist/mnist_large_02_04| 4.15%<br>2.33%<br>1.58%        | 7.68%<br>5.37%<br>4.70%           | 5.81%<br>3.54%<br>2.59%                |
+| MNIST    | 0.3          | mnist/mnist_small_03_04<br>mnist/mnist_med_03_04<br>mnist/mnist_large_03_04| 4.15%<br>2.33%<br>1.58%        | 10.80%<br>8.73%<br>8.23%           | 6.83%<br>4.35%<br>3.17%                |
+| MNIST    | 0.4          | mnist/mnist_small_04_04<br>mnist/mnist_med_04_04<br>mnist/mnist_large_04_04| 4.15%<br>2.72%<br>1.88%        | 17.57%<br>16.18%<br>16.57%         | 8.48%<br>5.585%<br>3.23%               |
+| CIFAR-10 | 2/255        | cifar-10/cifar_small_2_255<br>cifar-10/cifar_med_2_255<br>cifar-10/cifar_large_2_255| 42.33%<br>35.36%<br>40.61%        | 56.00%<br>52.27%<br>51.66%         | 50.08%<br>43.75%<br>46.97%               |
+| CIFAR-10 | 8/255        | cifar-10/cifar_small_8_255<br>cifar-10/cifar_med_8_255<br>cifar-10/cifar_large_8_255| 57.88%<br>54.20%<br>52.86%        | 70.31%<br>68.21%<br>66.57%         | 66.52%<br>61.21%<br>61.66%               |
+| CIFAR-10 | 16/255       | cifar-10/cifar_small_16_255<br>cifar-10/cifar_med_16_255<br>cifar-10/cifar_large_16_255| 67.32%<br>66.26%<br>64.40%        | 78.12%<br>77.79%<br>76.05%         | 73.44%<br>73.52%<br>71.78%               |
