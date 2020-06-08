@@ -65,7 +65,7 @@ python train.py --config cifar_IBP_Adv_Large_16_255.json
 
 You can download pretrained models here:
 
-- [trained_IBP_models](https://drive.google.com/mymodel.pth): Training by *AdvIBP* on MNIST and CIFAR-10 for different model architectures and different perturbation settings. 
+- [trained_IBP_models](https://drive.google.com/drive/folders/10R3_1lPciXgHSMivrdwQtF3Vhom9dPiw?usp=sharing): Training by *AdvIBP* on MNIST and CIFAR-10 for different model architectures and different perturbation settings. 
 
 To evaluate the best (and largest) MNIST and CIFAR-10 model (same model structure as in Gowal et al. 2018, referred to as "dm-large" in our paper), run:
 
