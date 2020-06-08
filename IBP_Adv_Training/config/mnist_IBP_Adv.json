@@ -1,7 +1,7 @@
 {
     "network_model": "network.py",
     "dataset": "mnist",
-    "models_path": "./mnist_IBP_Large_03_04/",
+    "models_path": "./mnist_med_small_03_04/",
     "training_params": {
         "method": "robust",
         "epochs": 250,
@@ -19,8 +19,7 @@
         "schedule_type": "smoothed",
         "norm": "inf",
         "verbose": false,
-        "multi_gpu": true,
-        "device_id": [0, 1, 2, 3],
+        "multi_gpu": false,
         "warm_up": {"schedule_start": 0, "schedule_length": 50, "schedule_type": "smoothed"},
         "inner_max_eval": {"schedule_start": 10, "schedule_length": 50, "schedule_type": "linear", "c_max": 1e-4, "c_min": 0},
         "loader_params": {"batch_size": 256, "test_batch_size": 256, "shuffle_train": true},
@@ -43,9 +42,15 @@
     },
     "models": [
         {
-            "model_id": "IBP_Large",
-            "model_class": "IBP_large",
-            "model_params": {"in_ch": 1, "in_dim": 28, "linear_size": 512}
+            "model_id": "cnn_4layer_width_8",
+            "model_class": "model_cnn_4layer",
+            "model_params": {"in_ch": 1, "in_dim": 28, "width": 8, "linear_size": 512}
+        },
+        {
+            "model_id": "cnn_2layer_width_4",
+            "model_class": "model_cnn_2layer",
+            "model_params": {"in_ch": 1, "in_dim": 28, "width": 4, "linear_size": 100}
         }
     ]
 }
+

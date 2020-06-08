@@ -2,7 +2,7 @@
     "network_model": "network.py",
     "dataset": "mnist",
     "load_pretrain": true,
-    "models_path": "./mnist_IBP_Large_03_04_824/",
+    "models_path": "../../trained_IBP_models/mnist/mnist_large_04_04",
     "training_params": {
         "method": "robust",
         "epochs": 250,
@@ -34,7 +34,7 @@
         "loss_func": "ce"
     },
     "eval_params": {
-        "epsilon": 0.2,
+        "epsilon": 0.4,
         "attack_steps": 1,
         "attack_stepsize": 0.03,
         "random_start": true,

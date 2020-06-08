@@ -2,7 +2,7 @@
     "network_model": "network.py",
     "dataset": "mnist",
     "load_pretrain": true,
-    "models_path": "./mnist_small_03_04_eval/",
+    "models_path": "../../trained_IBP_models/mnist/mnist_med_01_02",
     "training_params": {
         "method": "robust",
         "epochs": 250,
@@ -34,7 +34,7 @@
         "loss_func": "ce"
     },
     "eval_params": {
-        "epsilon": 0.3,
+        "epsilon": 0.1,
         "attack_steps": 1,
         "attack_stepsize": 0.03,
         "random_start": true,
@@ -46,11 +46,6 @@
             "model_id": "cnn_4layer_width_8",
             "model_class": "model_cnn_4layer",
             "model_params": {"in_ch": 1, "in_dim": 28, "width": 8, "linear_size": 512}
-        },
-        {
-            "model_id": "cnn_2layer_width_4",
-            "model_class": "model_cnn_2layer",
-            "model_params": {"in_ch": 1, "in_dim": 28, "width": 4, "linear_size": 100}
         }
     ]
 }
