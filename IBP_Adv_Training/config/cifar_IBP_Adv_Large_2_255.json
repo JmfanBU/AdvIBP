@@ -1,7 +1,7 @@
 {
     "network_model": "network.py",
     "dataset": "cifar",
-    "models_path": "./cifar_Large_2_255_multi_gpu_new_fresh/",
+    "models_path": "./cifar_Large_2_255/",
     "training_params": {
         "method": "robust",
         "epochs": 3200,

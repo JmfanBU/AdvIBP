@@ -1,5 +1,5 @@
 {
-    "model_def": "model_defs.py",
+    "model_def": "model.py",
     "dataset": "mnist",
     "path_prefix": "",
     "alpha_path": "__unused__",
@@ -17,10 +17,10 @@
         "schedule_length":61,
         "schedule_type": "linear",
         "norm": "Linf",
-        "verbose": false, 
-        "multi_gpu": false, 
+        "verbose": false,
+        "multi_gpu": false,
         "loader_params": {"batch_size": 128, "shuffle_train": true},
-        "method_params": {"batch_size": 128, "shuffle_train": true, "runnerup_only": false, "activity_reg": 0.000, "l1_reg": 0.000, "final-beta": 0.0, "final-kappa": 0.5, "convex-proj": 50, "bound_opts":{"same-slope": false, "zero-lb": false, "one-lb": false}, "batch_multiplier": 1}
+        "method_params": {"batch_size": 128, "shuffle_train": true, "runnerup_only": false, "bound_opts":{"same-slop": false, "zero-lb": false, "one-lb": false}, "batch_multiplier": 1}
     }
 }
 
