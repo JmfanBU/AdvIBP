@@ -1,5 +1,4 @@
-AdvIBP
-========================
+# AdvIBP -- Adversarial Training and Provable Robustness: A Tale of Two Objectives
 
 *AdvIBP* is a certifed adversarial training method that combines
 adversarial training and provable robustness verification. *AdvIBP*
