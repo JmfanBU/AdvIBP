@@ -1,8 +1,3 @@
-# Copyright (C) 2019, Huan Zhang <huan@huan-zhang.com>
-#                     Hongge Chen <chenhg@mit.edu>
-#                     Chaowei Xiao <xiaocw@umich.edu>
-#
-# This code is copied from CROWN-IBP
 import multiprocessing
 import torch
 from torch.utils import data
