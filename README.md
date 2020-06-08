@@ -1,4 +1,4 @@
-*AdvIBP*
+AdvIBP
 ========================
 
 *AdvIBP* is a certifed adversarial training method that combines
