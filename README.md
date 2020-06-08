@@ -9,7 +9,7 @@ Our repository provides high quality PyTorch implementations of *AdvIBP*. We imp
 To install requirements:
 
 ```setup
-pip install -r requirements.txt
+pip install -e .
 ```
 
 Training large models requires multiple GPUs.
