@@ -19,7 +19,7 @@ Our repository provides high quality PyTorch implementations of *AdvIBP* and *Ad
 | CIFAR-10 | 8/255        | cifar-10/cifar_large_8_255         | 52.86%         | 66.57%         | 61.66%    |
 | CIFAR-10 | 16/255       | cifar-10/cifar_large_16_255        | 64.40%         | 76.05%         | 71.78%    |
 
-## Requirements
+## Starting with the Code
 
 To install requirements and *AdvIBP*:
 
@@ -34,13 +34,15 @@ Our program is tested on Pytorch 1.4.0 and Python 3.6.9.
 
 We have all training parameters included in JSON files, under the config directory. We provide configuration files which can reproduce the results in our paper.
 
-To train *AdvIBP* on MNIST for small and medium models, run:
+To train *AdvIBP* and *AdvCROWN-IBP* on MNIST for small and medium models, run:
 
 ```bash
 # train under test epsilon=0.1
 python train.py --config mnist_IBP_Adv_01_02.json
+python train.py --config mnist_AdvCROWN-IBP_01_02.json
 # train under test epsilon=0.3
 python train.py --config mnist_IBP_Adv.json
+python train.py --config mnist_AdvCROWN-IBP.json
 ```
 
 To train *AdvIBP* on MNIST for large model, run:
@@ -49,11 +51,13 @@ To train *AdvIBP* on MNIST for large model, run:
 # This uses 4 GPUs by default.
 # train under test epsilon=0.1
 python train.py --config mnist_IBP_Adv_Large_01_02.json
+python train.py --config mnist_AdvCROWN-IBP_Large_01_02.json
 # train under test epsilon=0.3
 python train.py --config mnist_IBP_Adv_Large.json
+python train.py --config mnist_AdvCROWN-IBP_Large.json
 ```
 
-To train *AdvIBP* on CIFAR-10 for small and medium models, run:
+To train *AdvIBP* and *AdvCROWN-IBP* on CIFAR-10 for small and medium models, run:
 
 ```bash
 # train under test epsilon=2/255
@@ -80,7 +84,7 @@ python train.py --config cifar_IBP_Adv_Large_16_255.json
 
 You can download pretrained models here:
 
-- [trained_IBP_models](https://drive.google.com/drive/folders/10R3_1lPciXgHSMivrdwQtF3Vhom9dPiw?usp=sharing): Training by *AdvIBP* and *AdvCROWN-IBP* on MNIST and CIFAR-10 for different model architectures and different perturbation settings. The downloaded models should be in the same directory level as AdvIBP folder.
+- [trained_IBP_models](https://drive.google.com/drive/folders/10R3_1lPciXgHSMivrdwQtF3Vhom9dPiw?usp=sharing): Training by *AdvIBP* and *AdvCROWN-IBP* on MNIST and CIFAR-10 for different model architectures and different perturbation settings. The downloaded models should be in the same directory level as AdvIBP folder. The following command can reproduce the results in Table 2, 3 and 4 of the paper.
 
 To evaluate the state-of-art (and largest) MNIST and CIFAR-10 models (the same model structure as in Gowal et al. 2018, referred to as "dm-large" in our paper), run:
 
@@ -140,4 +144,19 @@ python train.py --config eval/cifar_IBP_Adv_Small_2_255_eval.json
 python train.py --config eval/cifar_IBP_Adv_Small_8_255_eval.json
 # Evaluate small model on CIFAR-10 with epsilon=16/255
 python train.py --config eval/cifar_IBP_Adv_Small_16_255_eval.json
+```
+
+
+To evaluate *AdvIBP* and CROWN-IBP on a wide range of models (Table 3), run:
+```bash
+# Evaluate 10 models on MNIST with epsilon=0.2
+python train.py --config eval/mnist_AdvIBP_02_eval.json
+python train.py --config eval/mnist_CROWN-IBP_02_eval.json
+# Evaluate 10 model on MNIST with epsilon=0.3
+python train.py --config eval/mnist_AdvIBP_03_eval.json
+python train.py --config eval/mnist_CROWN-IBP_03_eval.json
+
+# Evaluate 7 models on CIFAR-10 with epsilon=8/255
+python train.py --config eval/cifar_AdvIBP_eval.json
+python train.py --config eval/cifar_CROWN-IBP_eval.json
 ```

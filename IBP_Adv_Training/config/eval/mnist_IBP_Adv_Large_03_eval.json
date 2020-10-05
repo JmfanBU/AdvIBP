@@ -43,7 +43,12 @@
     },
     "models": [
         {
-            "model_id": "IBP_Large",
+            "model_id": "AdvIBP_Large",
+            "model_class": "IBP_large",
+            "model_params": {"in_ch": 1, "in_dim": 28, "linear_size": 512}
+        },
+        {
+            "model_id": "AdvCROWN-IBP_Large",
             "model_class": "IBP_large",
             "model_params": {"in_ch": 1, "in_dim": 28, "linear_size": 512}
         }

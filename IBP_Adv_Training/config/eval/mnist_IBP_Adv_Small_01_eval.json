@@ -43,7 +43,12 @@
     },
     "models": [
         {
-            "model_id": "cnn_2layer_width_4",
+            "model_id": "cnn_2layer_width_4_AdvIBP",
+            "model_class": "model_cnn_2layer_ibp",
+            "model_params": {"in_ch": 1, "in_dim": 28, "width": 4, "linear_size": 100}
+        },
+        {
+            "model_id": "cnn_2layer_width_4_AdvCROWN-IBP",
             "model_class": "model_cnn_2layer",
             "model_params": {"in_ch": 1, "in_dim": 28, "width": 4, "linear_size": 100}
         }

@@ -1,20 +1,19 @@
 {
     "network_model": "network.py",
     "dataset": "mnist",
-    "load_pretrain": true,
-    "models_path": "../../trained_IBP_models/mnist/mnist_med_01_02",
+    "models_path": "./mnist_AdvCROWN-IBP_Large_01_02/",
     "training_params": {
         "method": "robust",
         "epochs": 250,
-        "lr": 0.000125,
+        "lr": 5e-4,
         "lr_decay_factor": 0.25,
         "lr_decay_step": null,
-        "lr_decay_milestones": [0, 50, 100, 200],
-        "lr_decay_milestones_post_layer": [50, 100, 200],
+        "lr_decay_milestones": [150, 200],
+        "lr_decay_milestonesi_post_layer": [50, 100, 200],
         "weight_decay": 0.0,
         "optimizer": "adam",
         "starting_epsilon": 0.0,
-        "epsilon": 0.4,
+        "epsilon": 0.2,
         "schedule_start": 10,
         "schedule_length": 40,
         "schedule_type": "smoothed",
@@ -22,12 +21,12 @@
         "verbose": false,
         "multi_gpu": false,
         "warm_up": {"schedule_start": 0, "schedule_length": 50, "schedule_type": "smoothed"},
-        "inner_max_eval": {"schedule_start": 10, "schedule_length": 50, "schedule_type": "linear", "c_max": 1e-4, "c_min": 1e-6},
+        "inner_max_eval": {"schedule_start": 10, "schedule_length": 50, "schedule_type": "linear", "c_max": 1e-5, "c_min": 0},
         "loader_params": {"batch_size": 256, "test_batch_size": 256, "shuffle_train": true},
-        "method_params": {"bounded_input": true, "bound_type": "interval", "batch_multiplier": 1, "adversarial_training": true, "eval": true}
+        "method_params": {"bounded_input": true, "bound_type": "crown-interval", "batch_multiplier": 1, "adversarial_training": true}
     },
     "attack_params": {
-        "epsilon": 0.4,
+        "epsilon": 0.2,
         "attack_steps": 1,
         "attack_stepsize": 0.03,
         "random_start": true,
@@ -43,15 +42,9 @@
     },
     "models": [
         {
-            "model_id": "cnn_4layer_width_8_AdvIBP",
-            "model_class": "model_cnn_4layer",
-            "model_params": {"in_ch": 1, "in_dim": 28, "width": 8, "linear_size": 512}
-        },
-        {
-            "model_id": "cnn_4layer_width_8_AdvCROWN-IBP",
-            "model_class": "model_cnn_4layer",
-            "model_params": {"in_ch": 1, "in_dim": 28, "width": 8, "linear_size": 512}
+            "model_id": "IBP_Large",
+            "model_class": "IBP_large",
+            "model_params": {"in_ch": 1, "in_dim": 28, "linear_size": 512}
         }
     ]
 }
-

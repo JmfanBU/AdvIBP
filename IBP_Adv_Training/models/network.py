@@ -62,7 +62,7 @@ def model_cnn_2layer_ibp(in_ch, in_dim, width, linear_size=128):
     model = nn.Sequential(
         nn.Conv2d(in_ch, 4 * width, 4, stride=2, padding=1),
         nn.ReLU(),
-        nn.Conv2d(4 * width, 8 * width, 4, stride=1, padding=1),
+        nn.Conv2d(4 * width, 8 * width, 4, stride=2, padding=1),
         nn.ReLU(),
         Flatten(),
         nn.Linear(8 * width * np.prod(conv2_shape).item(), linear_size),
