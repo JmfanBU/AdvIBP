@@ -2,7 +2,7 @@
 
 This repository is the official implementation of Adversarial Training and Provable Robustness: A Tale of Two Objectives. *AdvIBP* is a certifed adversarial training method that combines adversarial training and provable robustness verification. *AdvIBP* matches or outperforms state-of-art approach, [CROWN-IBP](https://openreview.net/pdf?id=Skxuk1rFwB), for provable L\_infinity robustness on MNIST and CIFAR. We achieved state-of-the-art *verified* (certified) error on MNIST and CIFAR: for MNIST, **6.60\%** at `epsilon=0.3` and **12.30\%** at `epsilon=0.4` (L\_infinity norm distortion); and for CIFAR, **66.57\%** at `epsilon=8/255` and **76.05\%** at `epsilon=16/255`.
 
-Our repository provides high quality PyTorch implementations of *AdvIBP*. We implemented Multi-GPU training for training large models.
+Our repository provides high quality PyTorch implementations of *AdvIBP* and *AdvCROWN-IBP*. We implemented Multi-GPU training for training large models.
 
 
 ## Results
@@ -15,7 +15,7 @@ Our repository provides high quality PyTorch implementations of *AdvIBP*. We imp
 | MNIST    | 0.2          | mnist/mnist_large_02_04            | 1.51%          | 3.87%          | 1.98%     |
 | MNIST    | 0.3          | mnist/mnist_large_03_04            | 1.90%          | 6.60%          | 2.87%     |
 | MNIST    | 0.4          | mnist/mnist_large_04_04            | 1.90%          | 12.30%         | 3.46%     |
-| CIFAR-10 | 2/255        | cifar-10/cifar-10/cifar_large_2_255| 40.61%         | 51.66%         | 46.97%    |
+| CIFAR-10 | 2/255        | cifar-10/cifar_large_2_255         | 40.61%         | 51.66%         | 46.97%    |
 | CIFAR-10 | 8/255        | cifar-10/cifar_large_8_255         | 52.86%         | 66.57%         | 61.66%    |
 | CIFAR-10 | 16/255       | cifar-10/cifar_large_16_255        | 64.40%         | 76.05%         | 71.78%    |
 
