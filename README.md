@@ -160,3 +160,18 @@ python train.py --config eval/mnist_CROWN-IBP_03_eval.json
 python train.py --config eval/cifar_AdvIBP_eval.json
 python train.py --config eval/cifar_CROWN-IBP_eval.json
 ```
+
+
+To evaluate *AdvIBP* on three new model structures in Table A and
+reproduce the result in Table C
+
+```bash
+# Evaluate on MNIST with epsilon=0.1
+python train.py --config eval/mnist_new_models_AdvIBP_01_eval.json
+# Evaluate on MNIST with epsilon=0.2
+python train.py --config eval/mnist_new_models_AdvIBP_02_eval.json
+# Evaluate on MNIST with epsilon=0.3
+python train.py --config eval/mnist_new_models_AdvIBP_03_eval.json
+# Evaluate on MNIST with epsilon=0.4
+python train.py --config eval/mnist_new_models_AdvIBP_04_eval.json
+```
