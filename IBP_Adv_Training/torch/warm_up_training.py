@@ -222,6 +222,7 @@ def epoch_train(
     batch_time = AverageMeter()
     batch_multiplier = kwargs.get("batch_multiplier", 1)
     coeff1, coeff2 = 1, 0
+    beta = 1
     optimal = False
     c_eval = None
     g1_norm = 0
@@ -354,7 +355,8 @@ def epoch_train(
             output = model(data, method_opt="forward",
                            disable_multi_gpu=(method == "natural"))
             data_adv, c_eval = attack.perturb(
-                data, labels, epsilon=eps, layer_idx=layer_idx, c_t=c_t
+                data, labels, epsilon=post_warm_up_eps,
+                layer_idx=layer_idx, c_t=c_t
             )
             output_adv = model(data_adv, method_opt="forward",
                                disable_multi_gpu=(method == "natural"))
@@ -379,9 +381,28 @@ def epoch_train(
         if verbose or (method != "natural" and method != "warm_up"):
             if kwargs["bound_type"] == "interval":
                 ub, lb = model(
-                    norm=norm, x_U=data_ub, x_L=data_lb, eps=eps, C=c,
-                    layer_idx=0, method_opt="interval_range"
+                    norm=norm, x_U=data_ub, x_L=data_lb,
+                    eps=post_warm_up_eps, C=c, layer_idx=0,
+                    method_opt="interval_range"
                 )
+            elif kwargs["bound_type"] == "crown-interval":
+                ub, ilb = model(
+                    norm=norm, x_U=data_ub, x_L=data_lb, eps=post_warm_up_eps,
+                    C=c, layer_idx=0, method_opt="interval_range"
+                )
+                crown_final_beta = kwargs['final-beta']
+                beta = (
+                    max_eps - post_warm_up_eps * (1. - crown_final_beta)
+                ) / max_eps if train else 0.
+                if beta < 1e-5:
+                    lb = ilb
+                else:
+                    # get the CROWN bound using interval bopunds
+                    _, _, clb, bias = model(
+                        norm=norm, x_U=data_ub, x_L=data_lb,
+                        eps=post_warm_up_eps, C=c, method_opt='backward_range'
+                    )
+                    lb = clb * beta + ilb * (1 - beta)
             else:
                 raise RuntimeError("Unknown bound_type " +
                                    kwargs["bound_type"])
@@ -406,19 +427,21 @@ def epoch_train(
                         regular_grads, robust_grads,
                         c_eval=c_eval, c_t=c_t, post_warm_up=post_warm_up
                     )
-                    # if t > 250:
-                    #     coeff1 = 0.
-                    #     coeff2 = 1.
                 if post_warm_up and optimal == 'opposite dir':
                     loss = coeff1 * regular_ce + coeff2 * robust_ce \
                         + 0.5 * robust_ce.pow(2)
-                else:
+                elif post_warm_up:
                     loss = coeff1 * regular_ce + coeff2 * robust_ce
+                else:
+                    # warm up with the crown-ibp bounds
+                    loss = robust_ce
                 model.zero_grad()
             else:
                 loss = coeff1 * regular_ce + coeff2 * robust_ce
         elif method == "natural" or method == "warm_up":
             loss = regular_ce
+        elif method == 'baseline':
+            loss = regular_ce + robust_ce
         else:
             raise ValueError("Unknown method " + method)
 
@@ -471,19 +494,35 @@ def epoch_train(
                     robust_errors=robust_errors
                 )
             )
-    logger.log(
-        '----------Summary----------\n'
-        'Reguler loss: {re_loss.avg:.2f}, '
-        'Robust loss: {rb_loss.avg:.2f}, '
-        'Err: {errors.avg:.3f}, '
-        'Adv Err: {adv_errors.avg:.3f}, '
-        'Rob Err: {robust_errors.avg:.3f},  '
-        'R: {model_range:.2f}'.format(
-            loss=losses, errors=errors, model_range=model_range,
-            robust_errors=robust_errors, adv_errors=adv_errors,
-            re_loss=regular_ce_losses, rb_loss=robust_ce_losses
+    if kwargs["bound_type"] == "crown-interval":
+        logger.log(
+            '----------Summary----------\n'
+            'Reguler loss: {re_loss.avg:.2f}, '
+            'Robust loss: {rb_loss.avg:.2f}, '
+            'Beta: {beta:.2f}, '
+            'Err: {errors.avg:.3f}, '
+            'Adv Err: {adv_errors.avg:.3f}, '
+            'Rob Err: {robust_errors.avg:.3f},  '
+            'R: {model_range:.2f}'.format(
+                loss=losses, errors=errors, model_range=model_range,
+                robust_errors=robust_errors, adv_errors=adv_errors,
+                re_loss=regular_ce_losses, rb_loss=robust_ce_losses, beta=beta
+            )
         )
-    )
+    else:
+        logger.log(
+            '----------Summary----------\n'
+            'Reguler loss: {re_loss.avg:.2f}, '
+            'Robust loss: {rb_loss.avg:.2f}, '
+            'Err: {errors.avg:.3f}, '
+            'Adv Err: {adv_errors.avg:.3f}, '
+            'Rob Err: {robust_errors.avg:.3f},  '
+            'R: {model_range:.2f}'.format(
+                loss=losses, errors=errors, model_range=model_range,
+                robust_errors=robust_errors, adv_errors=adv_errors,
+                re_loss=regular_ce_losses, rb_loss=robust_ce_losses
+            )
+        )
     if method == "natural" or method == "warm_up":
         return errors.avg, errors.avg
     else:
