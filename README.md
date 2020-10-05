@@ -45,7 +45,7 @@ python train.py --config mnist_IBP_Adv.json
 python train.py --config mnist_AdvCROWN-IBP.json
 ```
 
-To train *AdvIBP* on MNIST for large model, run:
+To train *AdvIBP* and *AdvCROWN-IBP* on MNIST for large model, run:
 
 ```bash
 # This uses 4 GPUs by default.
@@ -57,7 +57,7 @@ python train.py --config mnist_IBP_Adv_Large.json
 python train.py --config mnist_AdvCROWN-IBP_Large.json
 ```
 
-To train *AdvIBP* and *AdvCROWN-IBP* on CIFAR-10 for small and medium models, run:
+To train *AdvIBP* on CIFAR-10 for small and medium models, run:
 
 ```bash
 # train under test epsilon=2/255
@@ -68,7 +68,7 @@ python train.py --config cifar_IBP_Adv.json
 python train.py --config cifar_IBP_Adv_16_255.json
 ```
 
-To train *AdvIBP* on MNIST for large model, run:
+To train *AdvIBP* on CIFAR-10 for large model, run:
 
 ```bash
 # This uses 4 GPUs by default.
