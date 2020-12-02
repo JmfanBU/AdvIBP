@@ -2,6 +2,8 @@
 
 This repository is the official implementation of Adversarial Training and Provable Robustness: A Tale of Two Objectives. *AdvIBP* is a certifed adversarial training method that combines adversarial training and provable robustness verification. *AdvIBP* matches or outperforms state-of-art approach, [CROWN-IBP](https://openreview.net/pdf?id=Skxuk1rFwB), for provable L\_infinity robustness on MNIST and CIFAR. We achieved state-of-the-art *verified* (certified) error on MNIST and CIFAR: for MNIST, **6.60\%** at `epsilon=0.3` and **12.30\%** at `epsilon=0.4` (L\_infinity norm distortion); and for CIFAR, **66.57\%** at `epsilon=8/255` and **76.05\%** at `epsilon=16/255`.
 
+Jiameng Fan and Wenchao Li, ["Adversarial Training and Provable Robustness: A Tale of Two Objectives"](https://arxiv.org/pdf/2008.06081.pdf), AAAI 2021
+
 Our repository provides high quality PyTorch implementations of *AdvIBP* and *AdvCROWN-IBP*. We implemented Multi-GPU training for training large models.
 
 
