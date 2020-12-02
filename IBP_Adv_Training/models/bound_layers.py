@@ -1,3 +1,8 @@
+# Copyright (C) 2020, Jiameng Fan <jmfan@bu.edu>
+#
+# This program is licenced under the MIT License,
+# contained in the LICENCE file in this directory.
+
 import logging
 import warnings
 import torch
